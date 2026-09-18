@@ -15,7 +15,6 @@ interface Elements {
   catBadge: HTMLElement;
   catLabel: HTMLElement;
   cardText: HTMLElement;
-  cardPoints: HTMLElement;
   drawBtn: HTMLElement;
   heartBtn: HTMLElement;
   statDrawn: HTMLElement;
@@ -37,7 +36,6 @@ export function initGame(el: Elements): void {
       el.catLabel.textContent = '';
       el.catBadge.innerHTML = '';
       el.cardText.textContent = 'خلصت كل الكروت — اضغطوا مرة أخرى للخلط من جديد';
-      el.cardPoints.textContent = '';
       el.card.classList.remove('flipped');
       void el.card.offsetWidth;
       requestAnimationFrame(() => el.card.classList.add('flipped'));
@@ -51,7 +49,6 @@ export function initGame(el: Elements): void {
     el.catBadge.innerHTML = CATEGORY_ICONS[next.cat];
     el.catLabel.textContent = next.cat;
     el.cardText.textContent = next.text;
-    el.cardPoints.textContent = next.pts ?? '';
     drawn++;
     el.statDrawn.textContent = String(drawn);
 

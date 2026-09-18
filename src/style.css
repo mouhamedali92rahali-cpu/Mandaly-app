@@ -46,8 +46,8 @@ body {
 
 .stage {
   position: relative;
-  width: min(300px, 78vw);
-  height: min(420px, 62vh);
+  width: min(320px, 82vw);
+  height: min(460px, 66vh);
   margin-bottom: 26px;
 }
 
@@ -126,7 +126,9 @@ body {
   color: var(--navy);
   transform: rotateY(180deg);
   justify-content: flex-start;
-  padding-top: 38px;
+  padding-top: 32px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .cat-badge {
   display: flex;
@@ -151,18 +153,11 @@ body {
   margin-bottom: 14px;
 }
 .card-text {
-  font-size: 17px;
+  font-size: 15.5px;
   font-weight: 700;
-  line-height: 1.65;
+  line-height: 1.6;
   color: var(--navy);
 }
-.card-points {
-  margin-top: auto;
-  padding-top: 14px;
-  font-size: 11.5px;
-  color: #7a6f4d;
-}
-
 .actions {
   display: flex;
   flex-direction: column;

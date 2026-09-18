@@ -17,7 +17,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <div class="cat-badge" id="catBadge"></div>
           <div class="cat-label" id="catLabel"></div>
           <div class="card-text" id="cardText"></div>
-          <div class="card-points" id="cardPoints"></div>
         </div>
       </div>
     </div>
@@ -46,7 +45,6 @@ initGame({
   catBadge: document.getElementById('catBadge')!,
   catLabel: document.getElementById('catLabel')!,
   cardText: document.getElementById('cardText')!,
-  cardPoints: document.getElementById('cardPoints')!,
   drawBtn: document.getElementById('drawBtn')!,
   heartBtn: document.getElementById('heartBtn')!,
   statDrawn: document.getElementById('statDrawn')!,
