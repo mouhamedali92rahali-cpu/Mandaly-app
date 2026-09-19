@@ -1,5 +1,6 @@
 import './style.css';
 import { initGame } from './game';
+import { initInstallPrompt } from './install';
 import logoMark from './assets/logo-mark.png';
 
 const cardCorners = `
@@ -11,6 +12,11 @@ const cardCorners = `
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="wordmark">MANDALY</div>
+
+  <button class="btn-install" id="installBtn" hidden>⬇️ ثبّت اللعبة على هاتفك</button>
+  <p class="ios-hint" id="iosHint" hidden>
+    📲 للتثبيت: اضغط زر المشاركة ⬆️ بالأسفل، ثم اختر "إضافة إلى الشاشة الرئيسية"
+  </p>
 
   <div class="stage" id="stage">
     <div class="stack-card s2"></div>
@@ -60,4 +66,9 @@ initGame({
   statDrawn: document.getElementById('statDrawn')!,
   statHearts: document.getElementById('statHearts')!,
   heartPop: document.getElementById('heartPop')!,
+});
+
+initInstallPrompt({
+  installBtn: document.getElementById('installBtn') as HTMLButtonElement,
+  iosHint: document.getElementById('iosHint')!,
 });

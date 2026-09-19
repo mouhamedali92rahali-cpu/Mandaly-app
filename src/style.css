@@ -44,6 +44,46 @@ body {
   margin-bottom: 22px;
 }
 
+.btn-install[hidden] {
+  display: none;
+}
+.btn-install {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: min(320px, 82vw);
+  text-align: center;
+  padding: 13px 20px;
+  margin-bottom: 18px;
+  border-radius: 14px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+  background: var(--gold);
+  color: var(--navy-deep);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.btn-install:active {
+  transform: scale(0.97);
+}
+.btn-install:hover {
+  filter: brightness(1.06);
+}
+
+.ios-hint {
+  width: min(320px, 82vw);
+  margin: 0 0 18px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(227, 200, 118, 0.4);
+  background: rgba(227, 200, 118, 0.08);
+  color: var(--gold-soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .stage {
   position: relative;
   width: min(320px, 82vw);
