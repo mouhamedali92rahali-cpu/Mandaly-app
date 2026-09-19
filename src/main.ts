@@ -1,6 +1,13 @@
 import './style.css';
 import { initGame } from './game';
 
+const cardCorners = `
+  <span class="corner corner-tl"></span>
+  <span class="corner corner-tr"></span>
+  <span class="corner corner-bl"></span>
+  <span class="corner corner-br"></span>
+`;
+
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="wordmark">MANDALY</div>
 
@@ -10,10 +17,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="card" id="card">
       <div class="card-inner" id="cardInner">
         <div class="face face-back">
+          ${cardCorners}
           <div class="back-mark">M</div>
           <div class="back-hint">اضغط لسحب كرت</div>
         </div>
         <div class="face face-front">
+          ${cardCorners}
           <div class="cat-badge" id="catBadge"></div>
           <div class="cat-label" id="catLabel"></div>
           <div class="card-text" id="cardText"></div>
