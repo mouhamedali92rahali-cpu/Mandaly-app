@@ -141,9 +141,9 @@ body {
   width: 25%;
 }
 .back-logo {
-  width: 110px;
-  max-width: 32%;
-  height: auto;
+  height: 104px;
+  max-height: 22%;
+  width: auto;
 }
 .back-hint {
   margin-top: 14px;
