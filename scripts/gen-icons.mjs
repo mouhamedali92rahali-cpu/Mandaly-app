@@ -1,5 +1,6 @@
 import sharp from 'sharp';
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -33,3 +34,11 @@ for (const t of targets) {
   await sharp(master).resize(t.size, t.size).png().toFile(join(root, t.file));
   console.log('wrote', t.file);
 }
+
+// Icon files keep a stable filename across builds (they live in public/, unlike
+// Vite's content-hashed src/ assets), so browsers, CDNs, and iOS's own touch-icon
+// cache can keep serving old bytes at that same URL after a redeploy. A version
+// string appended as a query param forces every consumer to fetch fresh.
+const version = createHash('md5').update(master).digest('hex').slice(0, 10);
+writeFileSync(join(root, 'icon-version.json'), JSON.stringify({ version }));
+console.log('icon version:', version);
