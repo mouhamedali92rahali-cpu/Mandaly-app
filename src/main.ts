@@ -1,5 +1,6 @@
 import './style.css';
 import { initGame } from './game';
+import logoMark from './assets/logo-mark.png';
 
 const cardCorners = `
   <span class="corner corner-tl"></span>
@@ -18,7 +19,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="card-inner" id="cardInner">
         <div class="face face-back">
           ${cardCorners}
-          <div class="back-mark">M</div>
+          <img class="back-logo" src="${logoMark}" alt="Mandaly" />
           <div class="back-hint">اضغط لسحب كرت</div>
         </div>
         <div class="face face-front">

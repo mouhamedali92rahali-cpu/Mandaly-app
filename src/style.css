@@ -137,12 +137,13 @@ body {
   background: radial-gradient(circle at 50% 50%, var(--navy-soft), var(--navy) 75%);
   overflow: hidden;
 }
-.back-mark {
-  font-family: 'Cairo', serif;
-  font-weight: 800;
-  font-size: 44px;
-  color: var(--gold);
-  line-height: 1;
+.face-back .corner {
+  width: 25%;
+}
+.back-logo {
+  width: 110px;
+  max-width: 32%;
+  height: auto;
 }
 .back-hint {
   margin-top: 14px;
