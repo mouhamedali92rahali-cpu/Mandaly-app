@@ -56,6 +56,8 @@ interface Elements {
   cardText: HTMLElement;
   drawBtn: HTMLElement;
   heartBtn: HTMLElement;
+  prevBtn: HTMLButtonElement;
+  nextBtn: HTMLButtonElement;
   statDrawn: HTMLElement;
   statHearts: HTMLElement;
   heartPop: HTMLElement;
@@ -93,18 +95,42 @@ export function initGame(el: Elements): void {
   let drawn = 0;
   let hearts = 0;
 
+  // Every real card drawn this session, in order, so players can step back to
+  // review one instead of losing it the moment the next card is drawn.
+  const history: Card[] = [];
+  let historyIndex = -1;
+
   function resetDeck(): void {
     deck = buildDrawOrder(DECK);
   }
 
+  function updateNavButtons(): void {
+    el.prevBtn.disabled = historyIndex <= 0;
+    el.nextBtn.disabled = historyIndex < 0 || historyIndex >= history.length - 1;
+  }
+
+  function flipTo(render: () => void): void {
+    render();
+    el.card.classList.remove('flipped');
+    void el.card.offsetWidth;
+    requestAnimationFrame(() => el.card.classList.add('flipped'));
+  }
+
+  function showCard(card: Card): void {
+    flipTo(() => {
+      el.catBadge.innerHTML = CATEGORY_ICONS[card.cat];
+      el.catLabel.textContent = card.cat;
+      setCardText(el.cardText, card.text);
+    });
+  }
+
   function drawCard(): void {
     if (deck.length === 0) {
-      el.catLabel.textContent = '';
-      el.catBadge.innerHTML = '';
-      setCardText(el.cardText, 'خلصت كل الكروت — اضغطوا مرة أخرى للخلط من جديد');
-      el.card.classList.remove('flipped');
-      void el.card.offsetWidth;
-      requestAnimationFrame(() => el.card.classList.add('flipped'));
+      flipTo(() => {
+        el.catLabel.textContent = '';
+        el.catBadge.innerHTML = '';
+        setCardText(el.cardText, 'خلصت كل الكروت — اضغطوا مرة أخرى للخلط من جديد');
+      });
       resetDeck();
       drawn = 0;
       el.statDrawn.textContent = String(drawn);
@@ -112,19 +138,30 @@ export function initGame(el: Elements): void {
     }
 
     const next = deck.pop()!;
-    el.catBadge.innerHTML = CATEGORY_ICONS[next.cat];
-    el.catLabel.textContent = next.cat;
-    setCardText(el.cardText, next.text);
+    // Drawing a fresh card after stepping back drops whatever was ahead in
+    // history, the same way navigating to a new page drops "forward" history.
+    if (historyIndex < history.length - 1) history.length = historyIndex + 1;
+    history.push(next);
+    historyIndex = history.length - 1;
+
+    showCard(next);
     drawn++;
     el.statDrawn.textContent = String(drawn);
+    updateNavButtons();
+  }
 
-    el.card.classList.remove('flipped');
-    void el.card.offsetWidth;
-    requestAnimationFrame(() => el.card.classList.add('flipped'));
+  function goToHistory(index: number): void {
+    if (index < 0 || index >= history.length) return;
+    historyIndex = index;
+    showCard(history[historyIndex]);
+    updateNavButtons();
   }
 
   el.drawBtn.addEventListener('click', drawCard);
   el.card.addEventListener('click', drawCard);
+  el.prevBtn.addEventListener('click', () => goToHistory(historyIndex - 1));
+  el.nextBtn.addEventListener('click', () => goToHistory(historyIndex + 1));
+  updateNavButtons();
 
   el.heartBtn.addEventListener('click', () => {
     hearts++;

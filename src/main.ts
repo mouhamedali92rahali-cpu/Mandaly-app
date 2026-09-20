@@ -1,6 +1,7 @@
 import './style.css';
 import { initGame } from './game';
 import { initInstallPrompt } from './install';
+import { initFontToggle } from './font';
 import logoMark from './assets/logo-mark.png';
 
 const cardCorners = `
@@ -11,6 +12,8 @@ const cardCorners = `
 `;
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+  <button class="font-toggle" id="fontToggle" aria-label="تبديل خط نص الأسئلة">Aa</button>
+
   <div class="wordmark">MANDALY</div>
 
   <button class="btn-install" id="installBtn" hidden>⬇️ ثبّت اللعبة على هاتفك</button>
@@ -38,6 +41,11 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
   </div>
 
+  <div class="nav-row">
+    <button class="btn-nav" id="prevBtn" aria-label="الكرت السابق" disabled>‹ السابق</button>
+    <button class="btn-nav" id="nextBtn" aria-label="الكرت التالي" disabled>التالي ›</button>
+  </div>
+
   <div class="actions">
     <button class="btn btn-primary" id="drawBtn">اسحب كرت جديد</button>
     <button class="btn btn-heart" id="heartBtn">❤️ هاي تستاهل قلب</button>
@@ -63,6 +71,8 @@ initGame({
   cardText: document.getElementById('cardText')!,
   drawBtn: document.getElementById('drawBtn')!,
   heartBtn: document.getElementById('heartBtn')!,
+  prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
+  nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
   statDrawn: document.getElementById('statDrawn')!,
   statHearts: document.getElementById('statHearts')!,
   heartPop: document.getElementById('heartPop')!,
@@ -72,3 +82,5 @@ initInstallPrompt({
   installBtn: document.getElementById('installBtn') as HTMLButtonElement,
   iosHint: document.getElementById('iosHint')!,
 });
+
+initFontToggle(document.getElementById('fontToggle') as HTMLButtonElement);
