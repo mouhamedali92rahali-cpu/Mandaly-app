@@ -1,7 +1,11 @@
+import cardFlipUrl from './assets/card-flip.mp3';
+
 const STORAGE_KEY = 'mandaly-muted';
 
 let ctx: AudioContext | null = null;
 let muted = getSavedMuted();
+let flipBuffer: AudioBuffer | null = null;
+let flipBufferPromise: Promise<AudioBuffer> | null = null;
 
 function getSavedMuted(): boolean {
   try {
@@ -50,55 +54,33 @@ function playTones(tones: Tone[]): void {
   }
 }
 
-function createNoiseBuffer(audio: AudioContext, durationSec: number): AudioBuffer {
-  const length = Math.max(1, Math.floor(audio.sampleRate * durationSec));
-  const buffer = audio.createBuffer(1, length, audio.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
-  return buffer;
+function loadFlipBuffer(audio: AudioContext): Promise<AudioBuffer> {
+  if (flipBuffer) return Promise.resolve(flipBuffer);
+  flipBufferPromise ??= fetch(cardFlipUrl)
+    .then((res) => res.arrayBuffer())
+    .then((data) => audio.decodeAudioData(data))
+    .then((decoded) => {
+      flipBuffer = decoded;
+      return decoded;
+    });
+  return flipBufferPromise;
 }
 
-/**
- * Card flip/draw: a single flick-through-the-air whoosh that settles into a
- * soft landing tap, like a card being snapped down onto the table. The
- * whoosh is noise pushed through a bandpass filter whose center frequency
- * sweeps rapidly downward (the pitch-drop reads as motion), followed by a
- * short low-passed thud right as it lands.
- */
+/** Card flip/draw: a real recorded card-dealing snap, trimmed to one card. */
 export function playFlip(): void {
   const audio = getContext();
   if (!audio) return;
-  const now = audio.currentTime;
-
-  const whooshDur = 0.11;
-  const whoosh = audio.createBufferSource();
-  whoosh.buffer = createNoiseBuffer(audio, whooshDur);
-  const bandpass = audio.createBiquadFilter();
-  bandpass.type = 'bandpass';
-  bandpass.Q.value = 1.2;
-  bandpass.frequency.setValueAtTime(4200, now);
-  bandpass.frequency.exponentialRampToValueAtTime(700, now + whooshDur);
-  const whooshGain = audio.createGain();
-  whooshGain.gain.setValueAtTime(0, now);
-  whooshGain.gain.linearRampToValueAtTime(0.14, now + 0.02);
-  whooshGain.gain.exponentialRampToValueAtTime(0.0001, now + whooshDur);
-  whoosh.connect(bandpass).connect(whooshGain).connect(audio.destination);
-  whoosh.start(now);
-  whoosh.stop(now + whooshDur + 0.02);
-
-  const tapAt = now + whooshDur - 0.01;
-  const tap = audio.createBufferSource();
-  tap.buffer = createNoiseBuffer(audio, 0.03);
-  const lowpass = audio.createBiquadFilter();
-  lowpass.type = 'lowpass';
-  lowpass.frequency.value = 500;
-  const tapGain = audio.createGain();
-  tapGain.gain.setValueAtTime(0, tapAt);
-  tapGain.gain.linearRampToValueAtTime(0.18, tapAt + 0.004);
-  tapGain.gain.exponentialRampToValueAtTime(0.0001, tapAt + 0.05);
-  tap.connect(lowpass).connect(tapGain).connect(audio.destination);
-  tap.start(tapAt);
-  tap.stop(tapAt + 0.06);
+  loadFlipBuffer(audio)
+    .then((buffer) => {
+      if (muted) return; // mute may have been toggled while decoding
+      const source = audio.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audio.destination);
+      source.start();
+    })
+    .catch(() => {
+      // decode failure — sound is a nice-to-have, fail silently.
+    });
 }
 
 /** Bright, festive little fanfare for the "family heart" button. */
