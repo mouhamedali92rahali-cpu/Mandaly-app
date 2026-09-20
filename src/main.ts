@@ -2,6 +2,8 @@ import './style.css';
 import { initGame } from './game';
 import { initInstallPrompt } from './install';
 import { initFontToggle } from './font';
+import { initMuteToggle } from './mute';
+import { initTimer } from './timer';
 import logoMark from './assets/logo-mark.png';
 
 const cardCorners = `
@@ -12,7 +14,10 @@ const cardCorners = `
 `;
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <button class="font-toggle" id="fontToggle" aria-label="تبديل خط نص الأسئلة">Aa</button>
+  <div class="top-controls">
+    <button class="icon-btn" id="fontToggle" aria-label="تبديل خط نص الأسئلة">Aa</button>
+    <button class="icon-btn" id="muteToggle" aria-label="كتم/تشغيل الصوت">🔊</button>
+  </div>
 
   <div class="wordmark">MANDALY</div>
 
@@ -41,6 +46,15 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
   </div>
 
+  <div class="timer-row" id="timerRow" hidden>
+    <div class="timer-bar"><div class="timer-bar-fill" id="timerBarFill"></div></div>
+    <div class="timer-controls">
+      <div class="timer-display" id="timerDisplay">0:00</div>
+      <button class="timer-btn" id="timerToggle">ابدأ</button>
+      <button class="timer-reset" id="timerReset" aria-label="إعادة ضبط المؤقت">↺</button>
+    </div>
+  </div>
+
   <div class="nav-row">
     <button class="btn-nav" id="prevBtn" aria-label="الكرت السابق" disabled>‹ السابق</button>
     <button class="btn-nav" id="nextBtn" aria-label="الكرت التالي" disabled>التالي ›</button>
@@ -64,19 +78,30 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </div>
 `;
 
-initGame({
-  card: document.getElementById('card')!,
-  catBadge: document.getElementById('catBadge')!,
-  catLabel: document.getElementById('catLabel')!,
-  cardText: document.getElementById('cardText')!,
-  drawBtn: document.getElementById('drawBtn')!,
-  heartBtn: document.getElementById('heartBtn')!,
-  prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
-  nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
-  statDrawn: document.getElementById('statDrawn')!,
-  statHearts: document.getElementById('statHearts')!,
-  heartPop: document.getElementById('heartPop')!,
+const timer = initTimer({
+  row: document.getElementById('timerRow')!,
+  display: document.getElementById('timerDisplay')!,
+  barFill: document.getElementById('timerBarFill') as HTMLElement,
+  toggleBtn: document.getElementById('timerToggle') as HTMLButtonElement,
+  resetBtn: document.getElementById('timerReset') as HTMLButtonElement,
 });
+
+initGame(
+  {
+    card: document.getElementById('card')!,
+    catBadge: document.getElementById('catBadge')!,
+    catLabel: document.getElementById('catLabel')!,
+    cardText: document.getElementById('cardText')!,
+    drawBtn: document.getElementById('drawBtn')!,
+    heartBtn: document.getElementById('heartBtn')!,
+    prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
+    nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
+    statDrawn: document.getElementById('statDrawn')!,
+    statHearts: document.getElementById('statHearts')!,
+    heartPop: document.getElementById('heartPop')!,
+  },
+  timer,
+);
 
 initInstallPrompt({
   installBtn: document.getElementById('installBtn') as HTMLButtonElement,
@@ -84,3 +109,4 @@ initInstallPrompt({
 });
 
 initFontToggle(document.getElementById('fontToggle') as HTMLButtonElement);
+initMuteToggle(document.getElementById('muteToggle') as HTMLButtonElement);

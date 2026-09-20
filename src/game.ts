@@ -1,5 +1,7 @@
 import { DECK, type Card } from './data/deck';
 import { CATEGORY_ICONS, type CardCategory } from './data/categories';
+import { playFlip, playHeart } from './sound';
+import type { Timer } from './timer';
 
 const CATEGORIES: CardCategory[] = ['قلوب مفتوحة', 'حلبة العائلة', 'اقلب الطاولة'];
 const NO_REPEAT_EVER: CardCategory = 'اقلب الطاولة';
@@ -90,7 +92,7 @@ function setCardText(cardText: HTMLElement, text: string): void {
   cardText.classList.toggle('is-centered', isShort);
 }
 
-export function initGame(el: Elements): void {
+export function initGame(el: Elements, timer: Timer): void {
   let deck: Card[] = buildDrawOrder(DECK);
   let drawn = 0;
   let hearts = 0;
@@ -114,6 +116,7 @@ export function initGame(el: Elements): void {
     el.card.classList.remove('flipped');
     void el.card.offsetWidth;
     requestAnimationFrame(() => el.card.classList.add('flipped'));
+    playFlip();
   }
 
   function showCard(card: Card): void {
@@ -122,6 +125,7 @@ export function initGame(el: Elements): void {
       el.catLabel.textContent = card.cat;
       setCardText(el.cardText, card.text);
     });
+    timer.setCard(card.duration);
   }
 
   function drawCard(): void {
@@ -131,6 +135,7 @@ export function initGame(el: Elements): void {
         el.catBadge.innerHTML = '';
         setCardText(el.cardText, 'خلصت كل الكروت — اضغطوا مرة أخرى للخلط من جديد');
       });
+      timer.setCard(undefined);
       resetDeck();
       drawn = 0;
       el.statDrawn.textContent = String(drawn);
@@ -169,5 +174,6 @@ export function initGame(el: Elements): void {
     el.heartPop.classList.remove('show');
     void el.heartPop.offsetWidth;
     el.heartPop.classList.add('show');
+    playHeart();
   });
 }

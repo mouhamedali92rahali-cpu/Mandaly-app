@@ -49,13 +49,17 @@ body {
   margin-bottom: 22px;
 }
 
-.font-toggle {
-  all: unset;
-  box-sizing: border-box;
+.top-controls {
   position: fixed;
   top: calc(16px + env(safe-area-inset-top));
   left: calc(16px + env(safe-area-inset-left));
   z-index: 10;
+  display: flex;
+  gap: 8px;
+}
+.icon-btn {
+  all: unset;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,8 +74,84 @@ body {
   font-size: 13px;
   cursor: pointer;
 }
-.font-toggle:active {
+.icon-btn:active {
   transform: scale(0.92);
+}
+
+.timer-row[hidden] {
+  display: none;
+}
+.timer-row {
+  width: min(320px, 82vw);
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(227, 200, 118, 0.3);
+  background: rgba(227, 200, 118, 0.06);
+}
+.timer-row.timer-done {
+  border-color: var(--gold);
+  background: rgba(227, 200, 118, 0.16);
+}
+.timer-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(227, 200, 118, 0.18);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.timer-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+}
+.timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.timer-display {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--gold-soft);
+  min-width: 40px;
+}
+.timer-btn {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--navy-deep);
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.timer-btn:active {
+  transform: scale(0.96);
+}
+.timer-reset {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(227, 200, 118, 0.35);
+  color: var(--gold-soft);
+  font-size: 15px;
+  cursor: pointer;
+}
+.timer-reset:active {
+  transform: scale(0.9);
 }
 
 .nav-row {
