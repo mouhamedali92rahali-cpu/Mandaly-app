@@ -6,6 +6,11 @@
   --gold-soft: #e3c876;
   --cream: #f6f0e1;
   --cream-dim: #ece2c8;
+
+  /* Card question text only — everything else (buttons, labels, wordmark)
+     stays on Cairo. To revert the Changa trial, change this one line back
+     to: --font-question: 'Cairo', sans-serif; */
+  --font-question: 'Changa', sans-serif;
 }
 
 * {
@@ -224,10 +229,19 @@ body {
   margin-bottom: 14px;
 }
 .card-text {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  font-family: var(--font-question);
   font-size: 15.5px;
   font-weight: 700;
   line-height: 1.6;
   color: var(--navy);
+}
+.card-text.is-centered {
+  justify-content: safe center;
 }
 .actions {
   display: flex;

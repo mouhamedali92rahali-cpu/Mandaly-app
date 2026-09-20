@@ -61,6 +61,33 @@ interface Elements {
   heartPop: HTMLElement;
 }
 
+// Short questions get centered in the card's text area instead of hugging the
+// top with an empty gap below; longer ones stay top-anchored so they read
+// naturally and never crowd the card's bottom edge. "Short" means it wraps
+// to 3 lines or fewer.
+const SHORT_TEXT_MAX_LINES = 3;
+
+// cardText is a flex:1 child, so its own box is stretched to fill the card —
+// scrollHeight would just report that stretched box, not the text's actual
+// wrapped height. Counting the text node's own line boxes via Range sidesteps
+// that entirely. Rects are grouped by their vertical position rather than
+// just counted, because bidi text (Arabic mixed with a Latin "+1", say) can
+// split one visual line into multiple rects at the direction change.
+function countWrappedLines(cardText: HTMLElement): number {
+  const textNode = cardText.firstChild;
+  if (!textNode) return 0;
+  const range = document.createRange();
+  range.selectNodeContents(textNode);
+  const lineTops = new Set(Array.from(range.getClientRects(), (rect) => Math.round(rect.top)));
+  return lineTops.size;
+}
+
+function setCardText(cardText: HTMLElement, text: string): void {
+  cardText.textContent = text;
+  const isShort = countWrappedLines(cardText) <= SHORT_TEXT_MAX_LINES;
+  cardText.classList.toggle('is-centered', isShort);
+}
+
 export function initGame(el: Elements): void {
   let deck: Card[] = buildDrawOrder(DECK);
   let drawn = 0;
@@ -74,7 +101,7 @@ export function initGame(el: Elements): void {
     if (deck.length === 0) {
       el.catLabel.textContent = '';
       el.catBadge.innerHTML = '';
-      el.cardText.textContent = 'خلصت كل الكروت — اضغطوا مرة أخرى للخلط من جديد';
+      setCardText(el.cardText, 'خلصت كل الكروت — اضغطوا مرة أخرى للخلط من جديد');
       el.card.classList.remove('flipped');
       void el.card.offsetWidth;
       requestAnimationFrame(() => el.card.classList.add('flipped'));
@@ -87,7 +114,7 @@ export function initGame(el: Elements): void {
     const next = deck.pop()!;
     el.catBadge.innerHTML = CATEGORY_ICONS[next.cat];
     el.catLabel.textContent = next.cat;
-    el.cardText.textContent = next.text;
+    setCardText(el.cardText, next.text);
     drawn++;
     el.statDrawn.textContent = String(drawn);
 
