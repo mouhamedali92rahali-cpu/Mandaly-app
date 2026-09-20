@@ -41,7 +41,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       ${categoryRow('حلبة العائلة', 'تخمين وتحدٍّ، بنقاط فردية بسيطة')}
       ${categoryRow('اقلب الطاولة', 'يغيّر قواعد البطاقة القادمة، لمفاجأة خفيفة')}
       <p class="intro-text">اسحبوا بطاقة، اقرؤوها بصوت عالٍ، وطبّقوها معًا.</p>
-      <p class="intro-text">وفي أي لحظة تشعرون فيها بالدفء أو الضحك، قولوا: "هذه تستاهل قلب!" ❤️</p>
+      <p class="intro-text">وفي أي لحظة تشعرون فيها بالدفء أو الضحك، قولوا: "قلب لهذه اللحظة!" ❤️</p>
       <label class="intro-checkbox-row" id="dontShowAgainRow">
         <input type="checkbox" id="dontShowAgain" />
         <span>لا تعرض هذا مرة أخرى</span>
@@ -100,7 +100,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
     <div class="actions">
       <button class="btn btn-primary" id="drawBtn">اسحب كرت جديد</button>
-      <button class="btn btn-heart" id="heartBtn">❤️ هاي تستاهل قلب</button>
+      <button class="btn btn-heart" id="heartBtn">قلب لهذه اللحظة ❤️</button>
     </div>
 
     <div class="stats">

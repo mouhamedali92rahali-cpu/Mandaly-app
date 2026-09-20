@@ -59,34 +59,46 @@ function createNoiseBuffer(audio: AudioContext, durationSec: number): AudioBuffe
 }
 
 /**
- * Card riffle for a flip/draw. A real riffle isn't one smooth noise swell —
- * it's a fast stutter of separate little edge-clicks as the cards flick past
- * each other. This fires a handful of very short high-passed noise clicks in
- * quick, slightly irregular succession (irregular timing/amplitude so it
- * doesn't sound like a mechanical repeating beep).
+ * Card flip/draw: a single flick-through-the-air whoosh that settles into a
+ * soft landing tap, like a card being snapped down onto the table. The
+ * whoosh is noise pushed through a bandpass filter whose center frequency
+ * sweeps rapidly downward (the pitch-drop reads as motion), followed by a
+ * short low-passed thud right as it lands.
  */
 export function playFlip(): void {
   const audio = getContext();
   if (!audio) return;
   const now = audio.currentTime;
 
-  const clicks = 5;
-  for (let i = 0; i < clicks; i++) {
-    const at = now + i * 0.013 + Math.random() * 0.006;
-    const noise = audio.createBufferSource();
-    noise.buffer = createNoiseBuffer(audio, 0.02);
-    const highpass = audio.createBiquadFilter();
-    highpass.type = 'highpass';
-    highpass.frequency.value = 2200 + Math.random() * 1800;
-    const gain = audio.createGain();
-    const peak = 0.08 + Math.random() * 0.05;
-    gain.gain.setValueAtTime(0, at);
-    gain.gain.linearRampToValueAtTime(peak, at + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.02);
-    noise.connect(highpass).connect(gain).connect(audio.destination);
-    noise.start(at);
-    noise.stop(at + 0.025);
-  }
+  const whooshDur = 0.11;
+  const whoosh = audio.createBufferSource();
+  whoosh.buffer = createNoiseBuffer(audio, whooshDur);
+  const bandpass = audio.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.Q.value = 1.2;
+  bandpass.frequency.setValueAtTime(4200, now);
+  bandpass.frequency.exponentialRampToValueAtTime(700, now + whooshDur);
+  const whooshGain = audio.createGain();
+  whooshGain.gain.setValueAtTime(0, now);
+  whooshGain.gain.linearRampToValueAtTime(0.14, now + 0.02);
+  whooshGain.gain.exponentialRampToValueAtTime(0.0001, now + whooshDur);
+  whoosh.connect(bandpass).connect(whooshGain).connect(audio.destination);
+  whoosh.start(now);
+  whoosh.stop(now + whooshDur + 0.02);
+
+  const tapAt = now + whooshDur - 0.01;
+  const tap = audio.createBufferSource();
+  tap.buffer = createNoiseBuffer(audio, 0.03);
+  const lowpass = audio.createBiquadFilter();
+  lowpass.type = 'lowpass';
+  lowpass.frequency.value = 500;
+  const tapGain = audio.createGain();
+  tapGain.gain.setValueAtTime(0, tapAt);
+  tapGain.gain.linearRampToValueAtTime(0.18, tapAt + 0.004);
+  tapGain.gain.exponentialRampToValueAtTime(0.0001, tapAt + 0.05);
+  tap.connect(lowpass).connect(tapGain).connect(audio.destination);
+  tap.start(tapAt);
+  tap.stop(tapAt + 0.06);
 }
 
 /** Bright, festive little fanfare for the "family heart" button. */
