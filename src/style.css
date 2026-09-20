@@ -77,6 +77,10 @@ body {
 .icon-btn:active {
   transform: scale(0.92);
 }
+.icon-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
 
 .app-shell {
   display: flex;

@@ -95,6 +95,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
     <div class="nav-row">
       <button class="btn-nav" id="prevBtn" aria-label="الكرت السابق" disabled>‹ السابق</button>
+      <button class="icon-btn" id="shareBtn" aria-label="مشاركة هذا السؤال" disabled>📤</button>
       <button class="btn-nav" id="nextBtn" aria-label="الكرت التالي" disabled>التالي ›</button>
     </div>
 
@@ -133,6 +134,7 @@ initGame(
     cardText: document.getElementById('cardText')!,
     drawBtn: document.getElementById('drawBtn')!,
     heartBtn: document.getElementById('heartBtn')!,
+    shareBtn: document.getElementById('shareBtn') as HTMLButtonElement,
     prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
     nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
     statDrawn: document.getElementById('statDrawn')!,

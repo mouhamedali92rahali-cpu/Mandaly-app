@@ -1,6 +1,8 @@
 import { DECK, type Card } from './data/deck';
 import { CATEGORY_ICONS, type CardCategory } from './data/categories';
 import { playFlip, playHeart } from './sound';
+import { hapticDraw, hapticHeart } from './haptics';
+import { shareCard } from './share';
 import type { Timer } from './timer';
 
 const CATEGORIES: CardCategory[] = ['قلوب مفتوحة', 'حلبة العائلة', 'اقلب الطاولة'];
@@ -58,6 +60,7 @@ interface Elements {
   cardText: HTMLElement;
   drawBtn: HTMLElement;
   heartBtn: HTMLElement;
+  shareBtn: HTMLButtonElement;
   prevBtn: HTMLButtonElement;
   nextBtn: HTMLButtonElement;
   statDrawn: HTMLElement;
@@ -102,6 +105,10 @@ export function initGame(el: Elements, timer: Timer): void {
   const history: Card[] = [];
   let historyIndex = -1;
 
+  // The card currently showing, so the share button knows what to share and
+  // stays disabled on the card back / the "deck reshuffled" filler screen.
+  let currentCard: Card | null = null;
+
   function resetDeck(): void {
     deck = buildDrawOrder(DECK);
   }
@@ -109,6 +116,7 @@ export function initGame(el: Elements, timer: Timer): void {
   function updateNavButtons(): void {
     el.prevBtn.disabled = historyIndex <= 0;
     el.nextBtn.disabled = historyIndex < 0 || historyIndex >= history.length - 1;
+    el.shareBtn.disabled = currentCard === null;
   }
 
   function flipTo(render: () => void): void {
@@ -117,9 +125,11 @@ export function initGame(el: Elements, timer: Timer): void {
     void el.card.offsetWidth;
     requestAnimationFrame(() => el.card.classList.add('flipped'));
     playFlip();
+    hapticDraw();
   }
 
   function showCard(card: Card): void {
+    currentCard = card;
     flipTo(() => {
       el.catBadge.innerHTML = CATEGORY_ICONS[card.cat];
       el.catLabel.textContent = card.cat;
@@ -130,6 +140,7 @@ export function initGame(el: Elements, timer: Timer): void {
 
   function drawCard(): void {
     if (deck.length === 0) {
+      currentCard = null;
       flipTo(() => {
         el.catLabel.textContent = '';
         el.catBadge.innerHTML = '';
@@ -139,6 +150,7 @@ export function initGame(el: Elements, timer: Timer): void {
       resetDeck();
       drawn = 0;
       el.statDrawn.textContent = String(drawn);
+      el.shareBtn.disabled = true;
       return;
     }
 
@@ -175,5 +187,21 @@ export function initGame(el: Elements, timer: Timer): void {
     void el.heartPop.offsetWidth;
     el.heartPop.classList.add('show');
     playHeart();
+    hapticHeart();
+  });
+
+  const SHARE_ICON = el.shareBtn.textContent ?? '';
+  let shareFeedbackTimer: number | undefined;
+
+  el.shareBtn.addEventListener('click', () => {
+    if (!currentCard) return;
+    void shareCard(currentCard.text).then((result) => {
+      if (result !== 'copied') return;
+      window.clearTimeout(shareFeedbackTimer);
+      el.shareBtn.textContent = '✅';
+      shareFeedbackTimer = window.setTimeout(() => {
+        el.shareBtn.textContent = SHARE_ICON;
+      }, 1400);
+    });
   });
 }
