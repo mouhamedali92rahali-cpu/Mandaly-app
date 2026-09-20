@@ -66,7 +66,8 @@ interface Elements {
   statDrawn: HTMLElement;
   statHearts: HTMLElement;
   heartPop: HTMLElement;
-  filterRow: HTMLElement;
+  filterToggle: HTMLButtonElement;
+  filterMenu: HTMLElement;
 }
 
 // Short questions get centered in the card's text area instead of hugging the
@@ -97,8 +98,8 @@ function setCardText(cardText: HTMLElement, text: string): void {
 }
 
 export function initGame(el: Elements, timer: Timer): void {
-  // null means drawing from all three categories; set by the filter chips to
-  // restrict the pool to just one, e.g. a calmer "قلوب مفتوحة"-only session.
+  // null means drawing from all three categories; set from the "⋮" filter menu
+  // to restrict the pool to just one, e.g. a calmer "قلوب مفتوحة"-only session.
   let activeFilter: CardCategory | null = null;
 
   function currentPool(): Card[] {
@@ -214,21 +215,49 @@ export function initGame(el: Elements, timer: Timer): void {
     });
   });
 
-  el.filterRow.addEventListener('click', (e) => {
-    const chip = (e.target as HTMLElement).closest<HTMLElement>('.filter-chip');
-    if (!chip) return;
+  function closeFilterMenu(): void {
+    el.filterMenu.hidden = true;
+    el.filterToggle.setAttribute('aria-expanded', 'false');
+  }
 
-    const value = chip.dataset.filter!;
+  function openFilterMenu(): void {
+    el.filterMenu.hidden = false;
+    el.filterToggle.setAttribute('aria-expanded', 'true');
+  }
+
+  el.filterToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (el.filterMenu.hidden) openFilterMenu();
+    else closeFilterMenu();
+  });
+
+  el.filterMenu.addEventListener('click', (e) => {
+    const item = (e.target as HTMLElement).closest<HTMLElement>('.filter-menu-item');
+    if (!item) return;
+
+    const value = item.dataset.filter!;
     activeFilter = value === 'all' ? null : (value as CardCategory);
 
-    for (const other of el.filterRow.querySelectorAll('.filter-chip')) {
-      const isActive = other === chip;
+    for (const other of el.filterMenu.querySelectorAll('.filter-menu-item')) {
+      const isActive = other === item;
       other.classList.toggle('active', isActive);
-      other.setAttribute('aria-pressed', String(isActive));
+      other.setAttribute('aria-checked', String(isActive));
     }
+    // A dot on the "⋮" button is the only always-visible cue once a filter is
+    // active, since the menu itself stays closed the rest of the time.
+    el.filterToggle.classList.toggle('has-filter', activeFilter !== null);
 
     // Only affects the pool future draws come from — the card on screen and
     // history stay put until the next draw.
     deck = buildDrawOrder(currentPool());
+    closeFilterMenu();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!el.filterMenu.hidden && !el.filterMenu.contains(e.target as Node)) closeFilterMenu();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !el.filterMenu.hidden) closeFilterMenu();
   });
 }
