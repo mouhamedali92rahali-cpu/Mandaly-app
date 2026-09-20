@@ -7,9 +7,9 @@ function vibrate(pattern: number | number[]): void {
 }
 
 export function hapticDraw(): void {
-  vibrate(15);
+  vibrate(35);
 }
 
 export function hapticHeart(): void {
-  vibrate([12, 40, 12]);
+  vibrate([25, 50, 25]);
 }

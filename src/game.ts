@@ -66,6 +66,7 @@ interface Elements {
   statDrawn: HTMLElement;
   statHearts: HTMLElement;
   heartPop: HTMLElement;
+  filterRow: HTMLElement;
 }
 
 // Short questions get centered in the card's text area instead of hugging the
@@ -96,7 +97,15 @@ function setCardText(cardText: HTMLElement, text: string): void {
 }
 
 export function initGame(el: Elements, timer: Timer): void {
-  let deck: Card[] = buildDrawOrder(DECK);
+  // null means drawing from all three categories; set by the filter chips to
+  // restrict the pool to just one, e.g. a calmer "قلوب مفتوحة"-only session.
+  let activeFilter: CardCategory | null = null;
+
+  function currentPool(): Card[] {
+    return activeFilter ? DECK.filter((card) => card.cat === activeFilter) : DECK;
+  }
+
+  let deck: Card[] = buildDrawOrder(currentPool());
   let drawn = 0;
   let hearts = 0;
 
@@ -110,7 +119,7 @@ export function initGame(el: Elements, timer: Timer): void {
   let currentCard: Card | null = null;
 
   function resetDeck(): void {
-    deck = buildDrawOrder(DECK);
+    deck = buildDrawOrder(currentPool());
   }
 
   function updateNavButtons(): void {
@@ -203,5 +212,23 @@ export function initGame(el: Elements, timer: Timer): void {
         el.shareBtn.textContent = SHARE_ICON;
       }, 1400);
     });
+  });
+
+  el.filterRow.addEventListener('click', (e) => {
+    const chip = (e.target as HTMLElement).closest<HTMLElement>('.filter-chip');
+    if (!chip) return;
+
+    const value = chip.dataset.filter!;
+    activeFilter = value === 'all' ? null : (value as CardCategory);
+
+    for (const other of el.filterRow.querySelectorAll('.filter-chip')) {
+      const isActive = other === chip;
+      other.classList.toggle('active', isActive);
+      other.setAttribute('aria-pressed', String(isActive));
+    }
+
+    // Only affects the pool future draws come from — the card on screen and
+    // history stay put until the next draw.
+    deck = buildDrawOrder(currentPool());
   });
 }

@@ -1,6 +1,8 @@
 const STORAGE_KEY = 'mandaly-intro-seen';
 
-function hasSeenIntro(): boolean {
+// The welcome page greets players on every open, no exceptions; only the
+// rules page is skippable, once dismissed with "don't show again" checked.
+function hasSeenRules(): boolean {
   try {
     return localStorage.getItem(STORAGE_KEY) === '1';
   } catch {
@@ -8,7 +10,7 @@ function hasSeenIntro(): boolean {
   }
 }
 
-function markIntroSeen(): void {
+function markRulesSeen(): void {
   try {
     localStorage.setItem(STORAGE_KEY, '1');
   } catch {
@@ -61,11 +63,18 @@ export function initIntro(el: IntroElements): void {
     el.rulesPage.classList.add('active');
   }
 
-  el.nextBtn.addEventListener('click', goToRulesPage);
+  el.nextBtn.addEventListener('click', () => {
+    if (hasSeenRules()) {
+      closeOverlay();
+      revealGame();
+    } else {
+      goToRulesPage();
+    }
+  });
 
   el.startBtn.addEventListener('click', () => {
     if (mode === 'onboarding') {
-      if (el.dontShowAgain.checked) markIntroSeen();
+      if (el.dontShowAgain.checked) markRulesSeen();
       closeOverlay();
       revealGame();
     } else {
@@ -84,14 +93,8 @@ export function initIntro(el: IntroElements): void {
     openOverlay();
   });
 
-  if (hasSeenIntro()) {
-    el.overlay.hidden = true;
-    el.appShell.hidden = false;
-    el.appShell.classList.add('shell-visible');
-  } else {
-    el.appShell.hidden = true;
-    el.welcomePage.hidden = false;
-    el.welcomePage.classList.add('active');
-    el.overlay.hidden = false;
-  }
+  el.appShell.hidden = true;
+  el.welcomePage.hidden = false;
+  el.welcomePage.classList.add('active');
+  el.overlay.hidden = false;
 }
