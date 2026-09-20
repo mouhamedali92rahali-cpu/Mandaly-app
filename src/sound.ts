@@ -59,40 +59,34 @@ function createNoiseBuffer(audio: AudioContext, durationSec: number): AudioBuffe
 }
 
 /**
- * Papery card "flick" for a flip/draw — a brief burst of band-passed noise
- * (the riffle/friction texture a real card makes) with a tiny low click
- * layered under its start for the edge's snap. A pure tone can't produce
- * that texture, so this bypasses playTones and shapes noise directly.
+ * Card riffle for a flip/draw. A real riffle isn't one smooth noise swell —
+ * it's a fast stutter of separate little edge-clicks as the cards flick past
+ * each other. This fires a handful of very short high-passed noise clicks in
+ * quick, slightly irregular succession (irregular timing/amplitude so it
+ * doesn't sound like a mechanical repeating beep).
  */
 export function playFlip(): void {
   const audio = getContext();
   if (!audio) return;
   const now = audio.currentTime;
 
-  const noise = audio.createBufferSource();
-  noise.buffer = createNoiseBuffer(audio, 0.13);
-  const bandpass = audio.createBiquadFilter();
-  bandpass.type = 'bandpass';
-  bandpass.frequency.value = 3200;
-  bandpass.Q.value = 0.6;
-  const noiseGain = audio.createGain();
-  noiseGain.gain.setValueAtTime(0, now);
-  noiseGain.gain.linearRampToValueAtTime(0.24, now + 0.008);
-  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-  noise.connect(bandpass).connect(noiseGain).connect(audio.destination);
-  noise.start(now);
-  noise.stop(now + 0.14);
-
-  const click = audio.createOscillator();
-  const clickGain = audio.createGain();
-  click.type = 'triangle';
-  click.frequency.value = 190;
-  clickGain.gain.setValueAtTime(0, now);
-  clickGain.gain.linearRampToValueAtTime(0.09, now + 0.004);
-  clickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
-  click.connect(clickGain).connect(audio.destination);
-  click.start(now);
-  click.stop(now + 0.04);
+  const clicks = 5;
+  for (let i = 0; i < clicks; i++) {
+    const at = now + i * 0.013 + Math.random() * 0.006;
+    const noise = audio.createBufferSource();
+    noise.buffer = createNoiseBuffer(audio, 0.02);
+    const highpass = audio.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 2200 + Math.random() * 1800;
+    const gain = audio.createGain();
+    const peak = 0.08 + Math.random() * 0.05;
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(peak, at + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.02);
+    noise.connect(highpass).connect(gain).connect(audio.destination);
+    noise.start(at);
+    noise.stop(at + 0.025);
+  }
 }
 
 /** Bright, festive little fanfare for the "family heart" button. */

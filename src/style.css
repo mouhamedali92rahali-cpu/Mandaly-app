@@ -78,6 +78,126 @@ body {
   transform: scale(0.92);
 }
 
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.app-shell[hidden] {
+  display: none;
+}
+.app-shell.shell-visible {
+  opacity: 1;
+}
+
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(1200px 800px at 50% -10%, var(--navy-soft), var(--navy-deep) 60%);
+  padding: 24px 18px calc(24px + env(safe-area-inset-bottom));
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+.intro-overlay[hidden] {
+  display: none;
+}
+.intro-overlay.overlay-hidden {
+  opacity: 0;
+}
+
+.intro-page {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: min(360px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: 22px;
+  border: 2px solid var(--gold);
+  background: var(--cream);
+  color: var(--navy);
+  padding: 30px 24px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.intro-page[hidden] {
+  display: none;
+}
+.intro-page.active {
+  opacity: 1;
+  transform: none;
+}
+
+.intro-logo {
+  width: 72px;
+  height: auto;
+  margin: 0 auto 14px;
+}
+
+.intro-title {
+  margin: 0 0 16px;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.intro-text {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #4a4330;
+}
+.intro-text-emphasis {
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.intro-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  text-align: start;
+}
+.intro-cat-badge {
+  margin-bottom: 0;
+}
+.intro-cat-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #4a4330;
+}
+.intro-cat-text b {
+  color: var(--navy);
+}
+
+.intro-checkbox-row[hidden] {
+  display: none;
+}
+.intro-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 18px;
+  font-size: 12.5px;
+  color: #6b6248;
+  cursor: pointer;
+}
+.intro-checkbox-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+}
+
 .timer-row[hidden] {
   display: none;
 }
