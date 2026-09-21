@@ -70,12 +70,18 @@ interface Elements {
   filterMenu: HTMLElement;
 }
 
-// Short/medium questions get a noticeably larger font and centered
-// vertically, so they read like a bold statement filling the card instead
-// of small type lost in empty space; longer ones fall back to the smaller
-// top-anchored size so they never crowd the card's bottom edge. "Short"
-// means it still wraps to 5 lines or fewer at the LARGER size.
-const SHORT_TEXT_MAX_LINES = 5;
+// Every card is always vertically centered (see .card-text in style.css); what
+// changes per card is the font size, picked here by shrink-to-fit: try the
+// boldest tier first and step down only as far as needed so the text block
+// still fits the card's fixed height, instead of a single short/long cutoff
+// that left medium-length questions stranded at the smallest size with a big
+// empty gap under them.
+const FONT_TIERS: ReadonlyArray<{ fontSize: number; lineHeight: number }> = [
+  { fontSize: 23, lineHeight: 1.75 },
+  { fontSize: 20, lineHeight: 1.7 },
+  { fontSize: 18.5, lineHeight: 1.68 },
+  { fontSize: 17, lineHeight: 1.65 },
+];
 
 // cardText is a flex:1 child, so its own box is stretched to fill the card —
 // scrollHeight would just report that stretched box, not the text's actual
@@ -94,12 +100,22 @@ function countWrappedLines(cardText: HTMLElement): number {
 
 function setCardText(cardText: HTMLElement, text: string): void {
   cardText.textContent = text;
-  // Try the larger centered style first and measure AT that size — sizing
-  // the decision on the smaller font would under-count how many lines the
-  // larger font actually takes, letting borderline text overflow once enlarged.
-  cardText.classList.add('is-centered');
-  const fitsLarge = countWrappedLines(cardText) <= SHORT_TEXT_MAX_LINES;
-  cardText.classList.toggle('is-centered', fitsLarge);
+  // The flex-allocated height stays the same across tiers (card-text's
+  // sibling min-height is 0 inside the scrollable .face-front), so it only
+  // needs to be read once, before trying any font size.
+  const available = cardText.clientHeight;
+
+  for (let i = 0; i < FONT_TIERS.length; i++) {
+    const tier = FONT_TIERS[i];
+    cardText.style.fontSize = `${tier.fontSize}px`;
+    cardText.style.lineHeight = String(tier.lineHeight);
+    const isLast = i === FONT_TIERS.length - 1;
+    if (isLast) break;
+    const lines = countWrappedLines(cardText);
+    const blockHeight = lines * tier.fontSize * tier.lineHeight;
+    if (blockHeight <= available) break;
+    // Doesn't fit at this tier — try the next, smaller one.
+  }
 }
 
 export function initGame(el: Elements, timer: Timer): void {
