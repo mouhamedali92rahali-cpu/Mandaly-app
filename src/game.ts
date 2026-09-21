@@ -70,18 +70,26 @@ interface Elements {
   filterMenu: HTMLElement;
 }
 
-// Every card is always vertically centered (see .card-text in style.css); what
-// changes per card is the font size, picked here by shrink-to-fit: try the
-// boldest tier first and step down only as far as needed so the text block
-// still fits the card's fixed height, instead of a single short/long cutoff
-// that left medium-length questions stranded at the smallest size with a big
-// empty gap under them.
-const FONT_TIERS: ReadonlyArray<{ fontSize: number; lineHeight: number }> = [
-  { fontSize: 23, lineHeight: 1.85 },
-  { fontSize: 20, lineHeight: 1.78 },
-  { fontSize: 18.5, lineHeight: 1.74 },
-  { fontSize: 17, lineHeight: 1.65 },
-];
+// Every card is always vertically centered (see .card-text in style.css).
+// Font size is picked by a continuous shrink/grow-to-fit search instead of a
+// small set of fixed tiers: a short 1-2 line question grows well past the
+// old flat "large" size to actually fill the card, a 6-line one shrinks only
+// as far as it needs to, and everything in between (3-4 lines, which used to
+// get stranded at whichever tier it fell into with empty space left over)
+// lands on its own in-between size. Line-height scales down alongside font
+// size — tighter leading reads fine at small sizes but would look sparse at
+// large ones, and looser leading is what makes the large sizes feel bold and
+// intentional rather than just "big text".
+const MAX_FONT_SIZE = 32;
+const MIN_FONT_SIZE = 16;
+const FONT_STEP = 0.5;
+const MAX_LINE_HEIGHT_RATIO = 1.85;
+const MIN_LINE_HEIGHT_RATIO = 1.6;
+
+function lineHeightRatioFor(fontSize: number): number {
+  const t = (fontSize - MIN_FONT_SIZE) / (MAX_FONT_SIZE - MIN_FONT_SIZE);
+  return MIN_LINE_HEIGHT_RATIO + t * (MAX_LINE_HEIGHT_RATIO - MIN_LINE_HEIGHT_RATIO);
+}
 
 // cardText is a flex:1 child, so its own box is stretched to fill the card —
 // scrollHeight would just report that stretched box, not the text's actual
@@ -100,22 +108,32 @@ function countWrappedLines(cardText: HTMLElement): number {
 
 function setCardText(cardText: HTMLElement, text: string): void {
   cardText.textContent = text;
-  // The flex-allocated height stays the same across tiers (card-text's
-  // sibling min-height is 0 inside the scrollable .face-front), so it only
-  // needs to be read once, before trying any font size.
+  // The flex-allocated height stays the same across every font size tried
+  // (card-text's sibling min-height is 0 inside the scrollable .face-front),
+  // so it only needs to be read once, before the search starts.
   const available = cardText.clientHeight;
 
-  for (let i = 0; i < FONT_TIERS.length; i++) {
-    const tier = FONT_TIERS[i];
-    cardText.style.fontSize = `${tier.fontSize}px`;
-    cardText.style.lineHeight = String(tier.lineHeight);
-    const isLast = i === FONT_TIERS.length - 1;
-    if (isLast) break;
+  let chosenSize = MIN_FONT_SIZE;
+  let chosenLineHeight = lineHeightRatioFor(MIN_FONT_SIZE);
+
+  for (let size = MAX_FONT_SIZE; size >= MIN_FONT_SIZE; size -= FONT_STEP) {
+    const lineHeight = lineHeightRatioFor(size);
+    cardText.style.fontSize = `${size}px`;
+    cardText.style.lineHeight = String(lineHeight);
     const lines = countWrappedLines(cardText);
-    const blockHeight = lines * tier.fontSize * tier.lineHeight;
-    if (blockHeight <= available) break;
-    // Doesn't fit at this tier — try the next, smaller one.
+    const blockHeight = lines * size * lineHeight;
+    if (blockHeight <= available) {
+      chosenSize = size;
+      chosenLineHeight = lineHeight;
+      break;
+    }
+    // Doesn't fit at this size — the loop tries the next, smaller one, and
+    // the smallest size is kept as a last-resort floor (the card itself
+    // still scrolls if even that overflows, same safety net as before).
   }
+
+  cardText.style.fontSize = `${chosenSize}px`;
+  cardText.style.lineHeight = String(chosenLineHeight);
 }
 
 export function initGame(el: Elements, timer: Timer): void {
