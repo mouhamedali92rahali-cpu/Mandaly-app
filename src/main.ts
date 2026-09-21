@@ -180,7 +180,6 @@ initIntro({
   overlay: document.getElementById('introOverlay')!,
   welcomePage: document.getElementById('introWelcome')!,
   rulesPage: document.getElementById('introRules')!,
-  nextBtn: document.getElementById('introNextBtn') as HTMLButtonElement,
   startBtn: document.getElementById('introStartBtn') as HTMLButtonElement,
   dontShowAgainRow: document.getElementById('dontShowAgainRow')!,
   dontShowAgain: document.getElementById('dontShowAgain') as HTMLInputElement,

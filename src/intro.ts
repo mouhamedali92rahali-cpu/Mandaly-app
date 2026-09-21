@@ -23,7 +23,6 @@ export interface IntroElements {
   overlay: HTMLElement;
   welcomePage: HTMLElement;
   rulesPage: HTMLElement;
-  nextBtn: HTMLButtonElement;
   startBtn: HTMLButtonElement;
   dontShowAgainRow: HTMLElement;
   dontShowAgain: HTMLInputElement;
@@ -63,13 +62,21 @@ export function initIntro(el: IntroElements): void {
     el.rulesPage.classList.add('active');
   }
 
-  el.nextBtn.addEventListener('click', () => {
+  function advanceFromWelcome(): void {
     if (hasSeenRules()) {
       closeOverlay();
       revealGame();
     } else {
       goToRulesPage();
     }
+  }
+
+  // Tapping anywhere on the welcome screen advances it, not just the "التالي"
+  // button — the button's own click bubbles here too, so one handler covers
+  // both. Gated to the welcome page only, so it never fires while the rules
+  // page (reused for onboarding and for the "؟" help reopen) is showing.
+  el.overlay.addEventListener('click', () => {
+    if (el.welcomePage.classList.contains('active')) advanceFromWelcome();
   });
 
   el.startBtn.addEventListener('click', () => {
