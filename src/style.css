@@ -636,13 +636,13 @@ body {
   font-family: var(--font-question);
   font-size: 17px;
   font-weight: 700;
-  line-height: 1.55;
+  line-height: 1.65;
   color: var(--navy);
 }
 .card-text.is-centered {
   justify-content: safe center;
   font-size: 23px;
-  line-height: 1.45;
+  line-height: 1.75;
 }
 .actions {
   display: flex;
