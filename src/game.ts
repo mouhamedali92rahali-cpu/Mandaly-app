@@ -77,9 +77,9 @@ interface Elements {
 // that left medium-length questions stranded at the smallest size with a big
 // empty gap under them.
 const FONT_TIERS: ReadonlyArray<{ fontSize: number; lineHeight: number }> = [
-  { fontSize: 23, lineHeight: 1.75 },
-  { fontSize: 20, lineHeight: 1.7 },
-  { fontSize: 18.5, lineHeight: 1.68 },
+  { fontSize: 23, lineHeight: 1.85 },
+  { fontSize: 20, lineHeight: 1.78 },
+  { fontSize: 18.5, lineHeight: 1.74 },
   { fontSize: 17, lineHeight: 1.65 },
 ];
 
