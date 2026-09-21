@@ -1,4 +1,4 @@
-import { playTimerEnd } from './sound';
+import { playTimerEnd, playTick } from './sound';
 
 interface TimerElements {
   row: HTMLElement;
@@ -28,6 +28,10 @@ export function initTimer(el: TimerElements): Timer {
   let running = false;
   let endAt = 0;
   let intervalId: number | undefined;
+  // The whole-second count last ticked, so a tick fires once per second
+  // crossed rather than every TICK_MS poll — and never for the starting
+  // second itself, only once the count actually drops.
+  let lastTickSecond: number | undefined;
 
   function render(): void {
     el.display.textContent = formatTime(remaining);
@@ -45,6 +49,13 @@ export function initTimer(el: TimerElements): Timer {
   function tick(): void {
     remaining = Math.max(0, (endAt - Date.now()) / 1000);
     render();
+
+    const currentSecond = Math.ceil(remaining);
+    if (remaining > 0 && currentSecond < (lastTickSecond ?? currentSecond)) {
+      lastTickSecond = currentSecond;
+      playTick();
+    }
+
     if (remaining <= 0) {
       stop();
       el.toggleBtn.textContent = 'ابدأ';
@@ -57,6 +68,7 @@ export function initTimer(el: TimerElements): Timer {
     if (remaining <= 0) remaining = duration;
     endAt = Date.now() + remaining * 1000;
     running = true;
+    lastTickSecond = Math.ceil(remaining);
     el.row.classList.remove('timer-done');
     el.toggleBtn.textContent = 'إيقاف';
     intervalId = window.setInterval(tick, TICK_MS);

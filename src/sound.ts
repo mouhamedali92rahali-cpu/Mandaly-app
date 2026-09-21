@@ -83,16 +83,33 @@ export function playFlip(): void {
     });
 }
 
-/** Bright, festive little fanfare for the "family heart" button. */
+/**
+ * Celebratory fanfare for the "family heart" button: a warm two-note pad
+ * underneath, an ascending arpeggio building energy, landing on a bright
+ * triumphant chord, then a few high triangle-wave sparkle notes on top —
+ * like a little burst of confetti.
+ */
 export function playHeart(): void {
   playTones([
     // warm low pad underneath, for a fuller/rounder "togetherness" feel
-    { freq: 392.0, start: 0, duration: 0.6, peak: 0.06, type: 'sine' }, // G4
-    // ascending sparkle on top
-    { freq: 523.25, start: 0, duration: 0.16, peak: 0.13 }, // C5
-    { freq: 659.25, start: 0.07, duration: 0.16, peak: 0.13 }, // E5
-    { freq: 783.99, start: 0.14, duration: 0.18, peak: 0.14 }, // G5
-    { freq: 1046.5, start: 0.22, duration: 0.36, peak: 0.17 }, // C6 — bright finish
+    { freq: 392.0, start: 0, duration: 0.7, peak: 0.07, type: 'sine' }, // G4
+    { freq: 261.63, start: 0, duration: 0.7, peak: 0.05, type: 'sine' }, // C4
+
+    // ascending arpeggio building energy
+    { freq: 523.25, start: 0, duration: 0.14, peak: 0.13 }, // C5
+    { freq: 659.25, start: 0.06, duration: 0.14, peak: 0.13 }, // E5
+    { freq: 783.99, start: 0.12, duration: 0.16, peak: 0.14 }, // G5
+    { freq: 1046.5, start: 0.18, duration: 0.18, peak: 0.15 }, // C6
+
+    // bright triumphant chord landing
+    { freq: 1046.5, start: 0.28, duration: 0.42, peak: 0.17 }, // C6
+    { freq: 1318.51, start: 0.28, duration: 0.42, peak: 0.14 }, // E6
+    { freq: 1567.98, start: 0.28, duration: 0.42, peak: 0.13 }, // G6
+
+    // confetti sparkle on top
+    { freq: 2093.0, start: 0.34, duration: 0.12, peak: 0.08, type: 'triangle' }, // C7
+    { freq: 1760.0, start: 0.42, duration: 0.12, peak: 0.07, type: 'triangle' }, // A6
+    { freq: 2349.32, start: 0.5, duration: 0.14, peak: 0.07, type: 'triangle' }, // D7
   ]);
 }
 
@@ -102,6 +119,11 @@ export function playTimerEnd(): void {
     { freq: 880, start: 0, duration: 0.16, peak: 0.14 },
     { freq: 659.25, start: 0.17, duration: 0.22, peak: 0.14 },
   ]);
+}
+
+/** Soft, unobtrusive tick for each second of a card's countdown timer. */
+export function playTick(): void {
+  playTones([{ freq: 880, start: 0, duration: 0.055, peak: 0.05 }]);
 }
 
 export function isMuted(): boolean {
