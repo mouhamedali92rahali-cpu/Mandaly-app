@@ -70,11 +70,12 @@ interface Elements {
   filterMenu: HTMLElement;
 }
 
-// Short questions get centered in the card's text area instead of hugging the
-// top with an empty gap below; longer ones stay top-anchored so they read
-// naturally and never crowd the card's bottom edge. "Short" means it wraps
-// to 3 lines or fewer.
-const SHORT_TEXT_MAX_LINES = 3;
+// Short/medium questions get a noticeably larger font and centered
+// vertically, so they read like a bold statement filling the card instead
+// of small type lost in empty space; longer ones fall back to the smaller
+// top-anchored size so they never crowd the card's bottom edge. "Short"
+// means it still wraps to 5 lines or fewer at the LARGER size.
+const SHORT_TEXT_MAX_LINES = 5;
 
 // cardText is a flex:1 child, so its own box is stretched to fill the card —
 // scrollHeight would just report that stretched box, not the text's actual
@@ -93,8 +94,12 @@ function countWrappedLines(cardText: HTMLElement): number {
 
 function setCardText(cardText: HTMLElement, text: string): void {
   cardText.textContent = text;
-  const isShort = countWrappedLines(cardText) <= SHORT_TEXT_MAX_LINES;
-  cardText.classList.toggle('is-centered', isShort);
+  // Try the larger centered style first and measure AT that size — sizing
+  // the decision on the smaller font would under-count how many lines the
+  // larger font actually takes, letting borderline text overflow once enlarged.
+  cardText.classList.add('is-centered');
+  const fitsLarge = countWrappedLines(cardText) <= SHORT_TEXT_MAX_LINES;
+  cardText.classList.toggle('is-centered', fitsLarge);
 }
 
 export function initGame(el: Elements, timer: Timer): void {

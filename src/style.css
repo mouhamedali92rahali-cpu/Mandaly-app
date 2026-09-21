@@ -634,13 +634,15 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   font-family: var(--font-question);
-  font-size: 15.5px;
+  font-size: 17px;
   font-weight: 700;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--navy);
 }
 .card-text.is-centered {
   justify-content: safe center;
+  font-size: 23px;
+  line-height: 1.45;
 }
 .actions {
   display: flex;
