@@ -1,0 +1,7 @@
+name = "mandaly-activation"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+kv_namespaces = [
+  { binding = "ACTIVATION_CODES", id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+]

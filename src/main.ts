@@ -5,6 +5,7 @@ import { initFontToggle } from './font';
 import { initMuteToggle } from './mute';
 import { initTimer } from './timer';
 import { initIntro } from './intro';
+import { initActivationGate } from './activation';
 import { CATEGORY_ICONS } from './data/categories';
 import logoMark from './assets/logo-mark.png';
 
@@ -30,7 +31,33 @@ const filterMenuItem = (cat: keyof typeof CATEGORY_ICONS) => `
 `;
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div class="intro-overlay" id="introOverlay">
+  <div class="activation-gate" id="activationGate" hidden>
+    <div class="activation-card">
+      ${cardCorners}
+      <img class="intro-logo" src="${logoMark}" alt="Mandaly" />
+      <h2 class="intro-title">فعّل نسختك من Mandaly</h2>
+      <p class="intro-text">أدخلوا كود التفعيل المطبوع داخل الصندوق لتشغيل اللعبة على هذا الجهاز.</p>
+      <form id="activationForm">
+        <label for="activationInput" class="sr-only">كود التفعيل</label>
+        <input
+          class="activation-input"
+          id="activationInput"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="MDLY-XXXX-XXXX"
+          maxlength="14"
+        />
+        <p class="activation-error" id="activationError" hidden></p>
+        <button class="btn btn-primary" id="activationSubmit" type="submit">تفعيل</button>
+      </form>
+      <p class="activation-hint">يُفعَّل الكود مرة واحدة تلقائيًا لكل جهاز — بحد أقصى جهازين لكل صندوق.</p>
+    </div>
+  </div>
+
+  <div class="intro-overlay" id="introOverlay" hidden>
     <div class="intro-page" id="introWelcome">
       ${cardCorners}
       <img class="intro-logo" src="${logoMark}" alt="Mandaly" />
@@ -58,7 +85,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
   </div>
 
-  <div class="app-shell" id="appShell">
+  <div class="app-shell" id="appShell" hidden>
     <div class="top-controls">
       <button class="icon-btn" id="fontToggle" aria-label="تبديل خط نص الأسئلة">Aa</button>
       <button class="icon-btn" id="muteToggle" aria-label="كتم/تشغيل الصوت">🔊</button>
@@ -139,49 +166,65 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </div>
 `;
 
-const timer = initTimer({
-  row: document.getElementById('timerRow')!,
-  display: document.getElementById('timerDisplay')!,
-  barFill: document.getElementById('timerBarFill') as HTMLElement,
-  toggleBtn: document.getElementById('timerToggle') as HTMLButtonElement,
-  resetBtn: document.getElementById('timerReset') as HTMLButtonElement,
-});
+// Everything below only runs once the activation gate has let the player
+// through — either immediately (already activated on this device) or right
+// after a successful one-time activation call.
+function initEverything(): void {
+  const timer = initTimer({
+    row: document.getElementById('timerRow')!,
+    display: document.getElementById('timerDisplay')!,
+    barFill: document.getElementById('timerBarFill') as HTMLElement,
+    toggleBtn: document.getElementById('timerToggle') as HTMLButtonElement,
+    resetBtn: document.getElementById('timerReset') as HTMLButtonElement,
+  });
 
-initGame(
+  initGame(
+    {
+      card: document.getElementById('card')!,
+      catBadge: document.getElementById('catBadge')!,
+      catLabel: document.getElementById('catLabel')!,
+      cardText: document.getElementById('cardText')!,
+      drawBtn: document.getElementById('drawBtn')!,
+      heartBtn: document.getElementById('heartBtn')!,
+      shareBtn: document.getElementById('shareBtn') as HTMLButtonElement,
+      prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
+      nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
+      filterToggle: document.getElementById('filterToggle') as HTMLButtonElement,
+      filterMenu: document.getElementById('filterMenu')!,
+      statDrawn: document.getElementById('statDrawn')!,
+      statHearts: document.getElementById('statHearts')!,
+      heartPop: document.getElementById('heartPop')!,
+    },
+    timer,
+  );
+
+  initInstallPrompt({
+    installBtn: document.getElementById('installBtn') as HTMLButtonElement,
+    iosHint: document.getElementById('iosHint')!,
+  });
+
+  initFontToggle(document.getElementById('fontToggle') as HTMLButtonElement);
+  initMuteToggle(document.getElementById('muteToggle') as HTMLButtonElement);
+
+  initIntro({
+    appShell: document.getElementById('appShell')!,
+    overlay: document.getElementById('introOverlay')!,
+    welcomePage: document.getElementById('introWelcome')!,
+    rulesPage: document.getElementById('introRules')!,
+    startBtn: document.getElementById('introStartBtn') as HTMLButtonElement,
+    dontShowAgainRow: document.getElementById('dontShowAgainRow')!,
+    dontShowAgain: document.getElementById('dontShowAgain') as HTMLInputElement,
+    helpBtn: document.getElementById('helpBtn') as HTMLButtonElement,
+  });
+}
+
+initActivationGate(
   {
-    card: document.getElementById('card')!,
-    catBadge: document.getElementById('catBadge')!,
-    catLabel: document.getElementById('catLabel')!,
-    cardText: document.getElementById('cardText')!,
-    drawBtn: document.getElementById('drawBtn')!,
-    heartBtn: document.getElementById('heartBtn')!,
-    shareBtn: document.getElementById('shareBtn') as HTMLButtonElement,
-    prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
-    nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
-    filterToggle: document.getElementById('filterToggle') as HTMLButtonElement,
-    filterMenu: document.getElementById('filterMenu')!,
-    statDrawn: document.getElementById('statDrawn')!,
-    statHearts: document.getElementById('statHearts')!,
-    heartPop: document.getElementById('heartPop')!,
+    gate: document.getElementById('activationGate')!,
+    form: document.getElementById('activationForm') as HTMLFormElement,
+    input: document.getElementById('activationInput') as HTMLInputElement,
+    submitBtn: document.getElementById('activationSubmit') as HTMLButtonElement,
+    errorMsg: document.getElementById('activationError')!,
   },
-  timer,
+  initEverything,
 );
-
-initInstallPrompt({
-  installBtn: document.getElementById('installBtn') as HTMLButtonElement,
-  iosHint: document.getElementById('iosHint')!,
-});
-
-initFontToggle(document.getElementById('fontToggle') as HTMLButtonElement);
-initMuteToggle(document.getElementById('muteToggle') as HTMLButtonElement);
-
-initIntro({
-  appShell: document.getElementById('appShell')!,
-  overlay: document.getElementById('introOverlay')!,
-  welcomePage: document.getElementById('introWelcome')!,
-  rulesPage: document.getElementById('introRules')!,
-  startBtn: document.getElementById('introStartBtn') as HTMLButtonElement,
-  dontShowAgainRow: document.getElementById('dontShowAgainRow')!,
-  dontShowAgain: document.getElementById('dontShowAgain') as HTMLInputElement,
-  helpBtn: document.getElementById('helpBtn') as HTMLButtonElement,
-});

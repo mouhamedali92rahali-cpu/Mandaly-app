@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Generated activation codes — never commit real codes to version control
+codes-batch-*.csv
+codes-batch-*-seed.json
+
+# Wrangler local state
+worker/.wrangler
+worker/node_modules
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
