@@ -3,5 +3,5 @@ main = "src/index.js"
 compatibility_date = "2024-09-01"
 
 kv_namespaces = [
-  { binding = "ACTIVATION_CODES", id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+  { binding = "ACTIVATION_CODES", id = "9d971b6dfcb34e51b8cbc3047ced5aaa" }
 ]
