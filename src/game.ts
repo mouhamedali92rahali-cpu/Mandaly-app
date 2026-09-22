@@ -171,7 +171,11 @@ export function initGame(el: Elements, timer: Timer): void {
 
   function updateNavButtons(): void {
     el.prevBtn.disabled = historyIndex <= 0;
-    el.nextBtn.disabled = historyIndex < 0 || historyIndex >= history.length - 1;
+    // "Next" always has something to do once a card has been drawn: step
+    // forward through history if we've stepped back from it, otherwise draw
+    // a new card — so it's only ever disabled before the very first draw,
+    // never in a state that needs explaining.
+    el.nextBtn.disabled = historyIndex < 0;
     el.shareBtn.disabled = currentCard === null;
   }
 
@@ -233,7 +237,10 @@ export function initGame(el: Elements, timer: Timer): void {
   el.drawBtn.addEventListener('click', drawCard);
   el.card.addEventListener('click', drawCard);
   el.prevBtn.addEventListener('click', () => goToHistory(historyIndex - 1));
-  el.nextBtn.addEventListener('click', () => goToHistory(historyIndex + 1));
+  el.nextBtn.addEventListener('click', () => {
+    if (historyIndex < history.length - 1) goToHistory(historyIndex + 1);
+    else drawCard();
+  });
   updateNavButtons();
 
   el.heartBtn.addEventListener('click', () => {
