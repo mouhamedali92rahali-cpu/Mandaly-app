@@ -42,6 +42,26 @@ export function initIntro(el: IntroElements, onReveal?: () => void): Intro {
   // overlay instead of revealing the game (which is already showing).
   let mode: 'onboarding' | 'reopened' = 'onboarding';
 
+  const allPages = [el.welcomePage, el.rulesPage, el.playersPage];
+
+  // The single place that decides which onboarding page is visible — every
+  // other page is explicitly hidden first, every time, so a page left
+  // showing from earlier in the flow (like "من يلعب؟" after onboarding
+  // finished) can never resurface alongside a later one, e.g. when "؟"
+  // reopens just the rules page. Closing the overlay only hides its outer
+  // container, not each child's own hidden state, which is exactly what let
+  // that happen before this was centralized.
+  function showOnlyPage(page: HTMLElement): void {
+    for (const p of allPages) {
+      if (p === page) continue;
+      p.hidden = true;
+      p.classList.remove('active');
+    }
+    page.hidden = false;
+    void page.offsetWidth;
+    page.classList.add('active');
+  }
+
   function closeOverlay(): void {
     el.overlay.classList.add('overlay-hidden');
     window.setTimeout(() => {
@@ -66,37 +86,19 @@ export function initIntro(el: IntroElements, onReveal?: () => void): Intro {
     onReveal?.();
   }
 
-  function goToRulesPage(): void {
-    el.welcomePage.hidden = true;
-    el.welcomePage.classList.remove('active');
-    el.rulesPage.hidden = false;
-    void el.rulesPage.offsetWidth;
-    el.rulesPage.classList.add('active');
-  }
-
   // "Who's playing" is a per-sitting choice, not a one-time explainer, so it
   // always shows — even on a visit that skips the rules page entirely.
-  function goToPlayersPage(): void {
-    el.welcomePage.hidden = true;
-    el.welcomePage.classList.remove('active');
-    el.rulesPage.hidden = true;
-    el.rulesPage.classList.remove('active');
-    el.playersPage.hidden = false;
-    void el.playersPage.offsetWidth;
-    el.playersPage.classList.add('active');
+  function advanceFromWelcome(): void {
+    if (hasSeenRules()) {
+      showOnlyPage(el.playersPage);
+    } else {
+      showOnlyPage(el.rulesPage);
+    }
   }
 
   function finishOnboarding(): void {
     closeOverlay();
     revealGame();
-  }
-
-  function advanceFromWelcome(): void {
-    if (hasSeenRules()) {
-      goToPlayersPage();
-    } else {
-      goToRulesPage();
-    }
   }
 
   // Tapping anywhere on the welcome screen advances it, not just the "التالي"
@@ -110,7 +112,7 @@ export function initIntro(el: IntroElements, onReveal?: () => void): Intro {
   el.startBtn.addEventListener('click', () => {
     if (mode === 'onboarding') {
       if (el.dontShowAgain.checked) markRulesSeen();
-      goToPlayersPage();
+      showOnlyPage(el.playersPage);
     } else {
       closeOverlay();
     }
@@ -120,16 +122,12 @@ export function initIntro(el: IntroElements, onReveal?: () => void): Intro {
     mode = 'reopened';
     el.startBtn.textContent = 'إغلاق';
     el.dontShowAgainRow.hidden = true;
-    el.welcomePage.hidden = true;
-    el.welcomePage.classList.remove('active');
-    el.rulesPage.hidden = false;
-    el.rulesPage.classList.add('active');
+    showOnlyPage(el.rulesPage);
     openOverlay();
   });
 
   el.appShell.hidden = true;
-  el.welcomePage.hidden = false;
-  el.welcomePage.classList.add('active');
+  showOnlyPage(el.welcomePage);
   el.overlay.hidden = false;
 
   return { finishOnboarding };
