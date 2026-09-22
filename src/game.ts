@@ -1,6 +1,6 @@
 import { DECK, type Card } from './data/deck';
 import { CATEGORY_ICONS, type CardCategory } from './data/categories';
-import { playFlip, playHeart } from './sound';
+import { playFlip, playHeart, playFamilyHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { shareCard } from './share';
 import { hasSession, advanceTurn, awardPointTo, getPlayers, getCurrentIndex } from './players';
@@ -352,24 +352,23 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
 
   const HEART_POP_DEFAULT_TEXT = el.heartPopText.textContent ?? '';
 
-  // The pop animation itself (icon + text + sound + haptic) is shared, but
-  // what it means is not: the heart button is a family-wide "this moment
-  // mattered" expression, unrelated to any one player, while tapping a
-  // player's chip is a specific scoring decision. Keeping the button's own
-  // text generic — never a name — is the whole point of that distinction.
-  function playCelebrationPop(text: string): void {
+  // The pop animation (icon + text + haptic) is shared, but the sound isn't:
+  // the heart button is a family-wide "this moment mattered" expression
+  // (always audible — see playFamilyHeart), while tapping a player's chip is
+  // an ordinary scoring action that stays muteable like any other effect.
+  function showCelebrationPop(text: string): void {
     el.heartPopText.textContent = text;
     el.heartPop.classList.remove('show');
     void el.heartPop.offsetWidth;
     el.heartPop.classList.add('show');
-    playHeart();
     hapticHeart();
   }
 
   el.heartBtn.addEventListener('click', () => {
     hearts++;
     el.statHearts.textContent = String(hearts);
-    playCelebrationPop(HEART_POP_DEFAULT_TEXT);
+    showCelebrationPop(HEART_POP_DEFAULT_TEXT);
+    playFamilyHeart();
   });
 
   el.turnPlayers.addEventListener('click', (e) => {
@@ -378,7 +377,8 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     const index = Number(chip.dataset.index);
     awardPointTo(index);
     renderTurnBar();
-    playCelebrationPop(`أحسنت يا ${getPlayers()[index].name}! ❤️`);
+    showCelebrationPop(`أحسنت يا ${getPlayers()[index].name}! ❤️`);
+    playHeart();
   });
 
   const SHARE_ICON = el.shareBtn.textContent ?? '';
