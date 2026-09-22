@@ -46,11 +46,29 @@ function setSavedFlag(key: string, value: boolean): void {
 function getContext(): AudioContext | null {
   try {
     ctx ??= new AudioContext();
-    if (ctx.state === 'suspended') void ctx.resume();
+    // Never auto-resume while the tab/app is backgrounded — otherwise a
+    // background timer tick could silently undo the pause below for the
+    // rest of the time it stays hidden.
+    if (ctx.state === 'suspended' && !document.hidden) void ctx.resume();
     return ctx;
   } catch {
     return null; // Web Audio unsupported — sounds are a nice-to-have, not a requirement.
   }
+}
+
+// Suspending the whole context (rather than just stopping the music source)
+// freezes every scheduled node — including an in-flight SFX envelope — and
+// resume() picks up exactly where it left off, so nothing needs to track
+// playback position by hand. Without this, looping background music kept
+// playing (audibly, on some devices) after leaving the app or locking the
+// screen, since neither backgrounding a tab nor a PWA going to the
+// background stops Web Audio on its own.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx) return;
+    if (document.hidden) void ctx.suspend();
+    else void ctx.resume();
+  });
 }
 
 interface Tone {
@@ -139,6 +157,42 @@ export function playHeart(): void {
     { freq: 2093.0, start: 0.34, duration: 0.12, peak: 0.08, type: 'triangle' }, // C7
     { freq: 1760.0, start: 0.42, duration: 0.12, peak: 0.07, type: 'triangle' }, // A6
     { freq: 2349.32, start: 0.5, duration: 0.14, peak: 0.07, type: 'triangle' }, // D7
+  ]);
+}
+
+/**
+ * Farewell fanfare for the end-of-session standings page: a longer arc than
+ * playHeart's — pad, a five-note rise, a bright held chord, sparkles, then a
+ * warm resolving chord that settles back down, for a "that's a wrap, well
+ * done" feeling rather than playHeart's quick mid-game hype burst.
+ */
+export function playFarewellFanfare(): void {
+  playTones([
+    // warm low pad underneath the rise
+    { freq: 196.0, start: 0, duration: 0.9, peak: 0.06, type: 'sine' }, // G3
+    { freq: 261.63, start: 0, duration: 0.9, peak: 0.045, type: 'sine' }, // C4
+
+    // five-note rising arpeggio
+    { freq: 523.25, start: 0, duration: 0.14, peak: 0.12 }, // C5
+    { freq: 659.25, start: 0.08, duration: 0.14, peak: 0.12 }, // E5
+    { freq: 783.99, start: 0.16, duration: 0.16, peak: 0.13 }, // G5
+    { freq: 1046.5, start: 0.24, duration: 0.16, peak: 0.14 }, // C6
+    { freq: 1318.51, start: 0.32, duration: 0.18, peak: 0.15 }, // E6
+
+    // bright held landing chord
+    { freq: 1046.5, start: 0.42, duration: 0.55, peak: 0.16 }, // C6
+    { freq: 1318.51, start: 0.42, duration: 0.55, peak: 0.13 }, // E6
+    { freq: 1567.98, start: 0.42, duration: 0.55, peak: 0.12 }, // G6
+
+    // sparkle on top
+    { freq: 2093.0, start: 0.48, duration: 0.14, peak: 0.07, type: 'triangle' }, // C7
+    { freq: 2349.32, start: 0.58, duration: 0.14, peak: 0.06, type: 'triangle' }, // D7
+    { freq: 1975.53, start: 0.7, duration: 0.16, peak: 0.06, type: 'triangle' }, // B6
+
+    // warm resolving chord, settling the piece down to a close
+    { freq: 349.23, start: 1.0, duration: 0.9, peak: 0.1 }, // F4
+    { freq: 440.0, start: 1.0, duration: 0.9, peak: 0.08 }, // A4
+    { freq: 523.25, start: 1.0, duration: 0.9, peak: 0.07 }, // C5
   ]);
 }
 

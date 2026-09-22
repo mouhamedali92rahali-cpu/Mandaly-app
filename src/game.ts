@@ -3,6 +3,7 @@ import { CATEGORY_ICONS, type CardCategory } from './data/categories';
 import { playFlip, playHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { shareCard } from './share';
+import { hasSession, currentPlayer, advanceTurn, awardPointToCurrent } from './players';
 import type { Timer } from './timer';
 
 const CATEGORIES: CardCategory[] = ['قلوب مفتوحة', 'حلبة العائلة', 'اقلب الطاولة'];
@@ -66,8 +67,21 @@ interface Elements {
   statDrawn: HTMLElement;
   statHearts: HTMLElement;
   heartPop: HTMLElement;
+  heartPopText: HTMLElement;
   filterToggle: HTMLButtonElement;
   filterMenu: HTMLElement;
+  turnBar: HTMLElement;
+  turnAvatar: HTMLElement;
+  turnName: HTMLElement;
+  turnScore: HTMLElement;
+  endSessionBtn: HTMLButtonElement;
+}
+
+export interface Game {
+  /** Call after a player session starts or restarts, so the turn indicator
+   * picks it up — initGame() itself always runs before onboarding finishes,
+   * so it can't know about a session that doesn't exist yet at that point. */
+  notifySessionChanged: () => void;
 }
 
 // Every card is always vertically centered (see .card-text in style.css).
@@ -143,10 +157,25 @@ function setCardText(cardText: HTMLElement, text: string): void {
   cardText.style.lineHeight = String(chosenLineHeight);
 }
 
-export function initGame(el: Elements, timer: Timer): void {
+export function initGame(el: Elements, timer: Timer, onEndSession: () => void): Game {
   // null means drawing from all three categories; set from the "⋮" filter menu
   // to restrict the pool to just one, e.g. a calmer "قلوب مفتوحة"-only session.
   let activeFilter: CardCategory | null = null;
+
+  // Whether the very next draw is the first one since a session (re)started —
+  // that first card belongs to whoever the turn indicator already shows, so
+  // the turn only advances on draws AFTER it. Otherwise the indicator would
+  // flip to the second player before the first player's own card even shows.
+  let firstDrawPending = true;
+
+  function renderTurnBar(): void {
+    const player = hasSession() ? currentPlayer() : null;
+    el.turnBar.hidden = !player;
+    if (!player) return;
+    el.turnAvatar.textContent = player.name.trim().charAt(0).toUpperCase();
+    el.turnName.textContent = player.name;
+    el.turnScore.textContent = `${player.score} ❤️`;
+  }
 
   function currentPool(): Card[] {
     return activeFilter ? DECK.filter((card) => card.cat === activeFilter) : DECK;
@@ -221,6 +250,12 @@ export function initGame(el: Elements, timer: Timer): void {
     history.push(next);
     historyIndex = history.length - 1;
 
+    if (hasSession()) {
+      if (firstDrawPending) firstDrawPending = false;
+      else advanceTurn();
+      renderTurnBar();
+    }
+
     showCard(next);
     drawn++;
     el.statDrawn.textContent = String(drawn);
@@ -243,9 +278,21 @@ export function initGame(el: Elements, timer: Timer): void {
   });
   updateNavButtons();
 
+  const HEART_POP_DEFAULT_TEXT = el.heartPopText.textContent ?? '';
+
   el.heartBtn.addEventListener('click', () => {
     hearts++;
     el.statHearts.textContent = String(hearts);
+
+    const player = hasSession() ? currentPlayer() : null;
+    if (player) {
+      awardPointToCurrent();
+      renderTurnBar();
+      el.heartPopText.textContent = `أحسنت يا ${player.name}! ❤️`;
+    } else {
+      el.heartPopText.textContent = HEART_POP_DEFAULT_TEXT;
+    }
+
     el.heartPop.classList.remove('show');
     void el.heartPop.offsetWidth;
     el.heartPop.classList.add('show');
@@ -313,4 +360,15 @@ export function initGame(el: Elements, timer: Timer): void {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !el.filterMenu.hidden) closeFilterMenu();
   });
+
+  el.endSessionBtn.addEventListener('click', onEndSession);
+
+  renderTurnBar();
+
+  return {
+    notifySessionChanged(): void {
+      firstDrawPending = true;
+      renderTurnBar();
+    },
+  };
 }

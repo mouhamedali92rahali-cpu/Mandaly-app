@@ -1,11 +1,13 @@
 import './style.css';
-import { initGame } from './game';
+import { initGame, type Game } from './game';
 import { initInstallPrompt } from './install';
 import { initFontToggle } from './font';
 import { initSoundMenu } from './soundMenu';
 import { resumeMusicIfEnabled } from './sound';
 import { initTimer } from './timer';
 import { initIntro } from './intro';
+import { initPlayerSetup } from './playerSetup';
+import { initFarewell, type Farewell } from './farewell';
 import { initActivationGate } from './activation';
 import { CATEGORY_ICONS } from './data/categories';
 import logoMark from './assets/logo-mark.png';
@@ -84,6 +86,40 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </label>
       <button class="btn btn-primary" id="introStartBtn">لنبدأ!</button>
     </div>
+
+    <div class="intro-page" id="introPlayers" hidden>
+      ${cardCorners}
+      <h2 class="intro-title">من يلعب اليوم؟</h2>
+      <p class="intro-text">
+        سجّلوا الأسماء لتتبّع الأدوار والنقاط الفردية — أو تخطّوا هذه الخطوة للعب الكلاسيكي بعدّاد مشترك.
+      </p>
+      <form id="playerForm" class="player-form">
+        <label for="playerNameInput" class="sr-only">اسم اللاعب</label>
+        <input
+          class="player-input"
+          id="playerNameInput"
+          type="text"
+          placeholder="اسم اللاعب"
+          maxlength="18"
+          autocomplete="off"
+        />
+        <button class="player-add-btn" type="submit" aria-label="إضافة لاعب">+</button>
+      </form>
+      <div class="player-chip-list" id="playerChipList"></div>
+      <button class="btn btn-primary" id="playersStartBtn">ابدأ اللعب</button>
+    </div>
+  </div>
+
+  <div class="intro-overlay" id="farewellOverlay" hidden>
+    <div class="intro-page active" id="farewellPage">
+      ${cardCorners}
+      <img class="intro-logo" src="${logoMark}" alt="Mandaly" />
+      <h2 class="intro-title">جلسة تستحق أن تُروى ✨</h2>
+      <p class="intro-text">شكرًا لأنكم قضيتم هذا الوقت معًا. إليكم نتائج هذه الجولة:</p>
+      <div class="standings-list" id="standingsList"></div>
+      <button class="btn btn-primary" id="farewellRestartBtn">🔁 جولة جديدة بنفس اللاعبين</button>
+      <button class="btn btn-heart" id="farewellEndBtn">إنهاء الجلسة</button>
+    </div>
   </div>
 
   <div class="app-shell" id="appShell" hidden>
@@ -119,6 +155,18 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
 
     <div class="wordmark">MANDALY</div>
+
+    <div class="turn-bar" id="turnBar" hidden>
+      <div class="turn-info">
+        <span class="turn-avatar" id="turnAvatar"></span>
+        <div class="turn-text">
+          <span class="turn-label">دور</span>
+          <span class="turn-name" id="turnName"></span>
+        </div>
+      </div>
+      <span class="turn-score" id="turnScore"></span>
+      <button class="turn-end-btn" id="endSessionBtn" aria-label="إنهاء الجلسة وعرض النتائج">إنهاء</button>
+    </div>
 
     <button class="btn-install" id="installBtn" hidden>⬇️ ثبّت اللعبة على هاتفك</button>
     <p class="ios-hint" id="iosHint" hidden>
@@ -173,7 +221,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="heart-pop" id="heartPop">
       <div class="heart-pop-inner">
         <div class="heart-pop-icon">❤️</div>
-        <div class="heart-pop-text">نحبكم برشا</div>
+        <div class="heart-pop-text" id="heartPopText">نحبكم برشا</div>
       </div>
     </div>
   </div>
@@ -191,7 +239,15 @@ function initEverything(): void {
     resetBtn: document.getElementById('timerReset') as HTMLButtonElement,
   });
 
-  initGame(
+  // `game` and `farewell` are defined further down but reference each other
+  // (ending a session shows the farewell page; restarting from that page
+  // needs to refresh the game's turn indicator) — the indirection through
+  // these forward-declared bindings breaks that cycle, since neither
+  // callback actually runs until well after both are assigned.
+  let game: Game;
+  let farewell: Farewell;
+
+  game = initGame(
     {
       card: document.getElementById('card')!,
       catBadge: document.getElementById('catBadge')!,
@@ -207,8 +263,15 @@ function initEverything(): void {
       statDrawn: document.getElementById('statDrawn')!,
       statHearts: document.getElementById('statHearts')!,
       heartPop: document.getElementById('heartPop')!,
+      heartPopText: document.getElementById('heartPopText')!,
+      turnBar: document.getElementById('turnBar')!,
+      turnAvatar: document.getElementById('turnAvatar')!,
+      turnName: document.getElementById('turnName')!,
+      turnScore: document.getElementById('turnScore')!,
+      endSessionBtn: document.getElementById('endSessionBtn') as HTMLButtonElement,
     },
     timer,
+    () => farewell.show(),
   );
 
   initInstallPrompt({
@@ -224,18 +287,43 @@ function initEverything(): void {
     musicItem: document.getElementById('musicToggleItem') as HTMLButtonElement,
   });
 
-  initIntro(
+  farewell = initFarewell(
+    {
+      overlay: document.getElementById('farewellOverlay')!,
+      standingsList: document.getElementById('standingsList')!,
+      restartBtn: document.getElementById('farewellRestartBtn') as HTMLButtonElement,
+      endBtn: document.getElementById('farewellEndBtn') as HTMLButtonElement,
+    },
+    () => game.notifySessionChanged(),
+    () => game.notifySessionChanged(),
+  );
+
+  const intro = initIntro(
     {
       appShell: document.getElementById('appShell')!,
       overlay: document.getElementById('introOverlay')!,
       welcomePage: document.getElementById('introWelcome')!,
       rulesPage: document.getElementById('introRules')!,
+      playersPage: document.getElementById('introPlayers')!,
       startBtn: document.getElementById('introStartBtn') as HTMLButtonElement,
       dontShowAgainRow: document.getElementById('dontShowAgainRow')!,
       dontShowAgain: document.getElementById('dontShowAgain') as HTMLInputElement,
       helpBtn: document.getElementById('helpBtn') as HTMLButtonElement,
     },
     resumeMusicIfEnabled,
+  );
+
+  initPlayerSetup(
+    {
+      form: document.getElementById('playerForm') as HTMLFormElement,
+      input: document.getElementById('playerNameInput') as HTMLInputElement,
+      chipList: document.getElementById('playerChipList')!,
+      startBtn: document.getElementById('playersStartBtn') as HTMLButtonElement,
+    },
+    () => {
+      game.notifySessionChanged();
+      intro.finishOnboarding();
+    },
   );
 }
 

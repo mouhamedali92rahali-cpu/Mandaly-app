@@ -23,13 +23,20 @@ export interface IntroElements {
   overlay: HTMLElement;
   welcomePage: HTMLElement;
   rulesPage: HTMLElement;
+  playersPage: HTMLElement;
   startBtn: HTMLButtonElement;
   dontShowAgainRow: HTMLElement;
   dontShowAgain: HTMLInputElement;
   helpBtn: HTMLButtonElement;
 }
 
-export function initIntro(el: IntroElements, onReveal?: () => void): void {
+export interface Intro {
+  /** Called by the player-setup step once it's done — closes onboarding and
+   * reveals the game, same as finishing onboarding used to happen inline. */
+  finishOnboarding: () => void;
+}
+
+export function initIntro(el: IntroElements, onReveal?: () => void): Intro {
   // The help button can reopen the rules page any time after onboarding is
   // done; when it does, the button reads "إغلاق" and just dismisses the
   // overlay instead of revealing the game (which is already showing).
@@ -67,10 +74,26 @@ export function initIntro(el: IntroElements, onReveal?: () => void): void {
     el.rulesPage.classList.add('active');
   }
 
+  // "Who's playing" is a per-sitting choice, not a one-time explainer, so it
+  // always shows — even on a visit that skips the rules page entirely.
+  function goToPlayersPage(): void {
+    el.welcomePage.hidden = true;
+    el.welcomePage.classList.remove('active');
+    el.rulesPage.hidden = true;
+    el.rulesPage.classList.remove('active');
+    el.playersPage.hidden = false;
+    void el.playersPage.offsetWidth;
+    el.playersPage.classList.add('active');
+  }
+
+  function finishOnboarding(): void {
+    closeOverlay();
+    revealGame();
+  }
+
   function advanceFromWelcome(): void {
     if (hasSeenRules()) {
-      closeOverlay();
-      revealGame();
+      goToPlayersPage();
     } else {
       goToRulesPage();
     }
@@ -87,8 +110,7 @@ export function initIntro(el: IntroElements, onReveal?: () => void): void {
   el.startBtn.addEventListener('click', () => {
     if (mode === 'onboarding') {
       if (el.dontShowAgain.checked) markRulesSeen();
-      closeOverlay();
-      revealGame();
+      goToPlayersPage();
     } else {
       closeOverlay();
     }
@@ -109,4 +131,6 @@ export function initIntro(el: IntroElements, onReveal?: () => void): void {
   el.welcomePage.hidden = false;
   el.welcomePage.classList.add('active');
   el.overlay.hidden = false;
+
+  return { finishOnboarding };
 }
