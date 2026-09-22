@@ -98,6 +98,7 @@ interface Elements {
   heartPopText: HTMLElement;
   lengthToggle: HTMLButtonElement;
   lengthMenu: HTMLElement;
+  calmOnlyItem: HTMLButtonElement;
   turnBar: HTMLElement;
   turnPlayers: HTMLElement;
   endSessionBtn: HTMLButtonElement;
@@ -187,6 +188,11 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   // Defaults to the full bank; set from the "⋮" length menu.
   let gameLength: GameLength = 'long';
 
+  // Independent of length: a pure single-category mode for a calmer,
+  // no-points, no-challenges session — bypasses the length ratios entirely
+  // rather than trying to fit "only one category" into a 3-category split.
+  let calmOnly = false;
+
   // Whether the very next draw is the first one since a session (re)started —
   // that first card belongs to whoever the turn indicator already shows, so
   // the turn only advances on draws AFTER it. Otherwise the indicator would
@@ -233,6 +239,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   }
 
   function currentPool(): Card[] {
+    if (calmOnly) return DECK.filter((c) => c.cat === 'قلوب مفتوحة');
     const excludeNeeds3 = getPlayers().length < 3;
     return selectCardsForLength(DECK, gameLength, excludeNeeds3);
   }
@@ -285,6 +292,15 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
 
   function drawCard(): void {
     if (deck.length === 0) {
+      // A player session has a defined size (the chosen game length) —
+      // running out of cards IS finishing it, so it goes straight to the
+      // standings instead of the classic "shuffle again" filler, which
+      // only makes sense for the open-ended no-session mode.
+      if (hasSession()) {
+        onEndSession();
+        return;
+      }
+
       currentCard = null;
       flipTo(() => {
         el.catLabel.textContent = '';
@@ -396,22 +412,33 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     else closeLengthMenu();
   });
 
+  function refreshLengthMenuUi(): void {
+    for (const other of el.lengthMenu.querySelectorAll('.filter-menu-item[data-length]')) {
+      const isActive = other.getAttribute('data-length') === gameLength;
+      other.classList.toggle('active', isActive);
+      other.setAttribute('aria-checked', String(isActive));
+    }
+    el.calmOnlyItem.classList.toggle('active', calmOnly);
+    el.calmOnlyItem.setAttribute('aria-checked', String(calmOnly));
+    // A dot on the "⋮" button is the only always-visible cue once a
+    // non-default choice is active, since the menu itself stays closed
+    // the rest of the time.
+    el.lengthToggle.classList.toggle('has-filter', calmOnly || gameLength !== 'long');
+  }
+
   el.lengthMenu.addEventListener('click', (e) => {
     const item = (e.target as HTMLElement).closest<HTMLElement>('.filter-menu-item');
     if (!item) return;
 
-    gameLength = item.dataset.length as GameLength;
-
-    for (const other of el.lengthMenu.querySelectorAll('.filter-menu-item')) {
-      const isActive = other === item;
-      other.classList.toggle('active', isActive);
-      other.setAttribute('aria-checked', String(isActive));
+    if (item === el.calmOnlyItem) {
+      calmOnly = !calmOnly;
+    } else if (item.dataset.length) {
+      gameLength = item.dataset.length as GameLength;
+    } else {
+      return;
     }
-    // A dot on the "⋮" button is the only always-visible cue once a
-    // non-default length is chosen, since the menu itself stays closed
-    // the rest of the time.
-    el.lengthToggle.classList.toggle('has-filter', gameLength !== 'long');
 
+    refreshLengthMenuUi();
     // Only affects the pool future draws come from — the card on screen and
     // history stay put until the next draw.
     deck = buildDrawOrder(currentPool());

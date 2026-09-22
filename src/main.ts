@@ -157,6 +157,11 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <button class="icon-btn" id="lengthToggle" aria-haspopup="true" aria-expanded="false" aria-label="اختيار طول اللعبة">⋮</button>
       <div class="filter-menu" id="lengthMenu" role="menu" hidden>
         ${LENGTH_OPTIONS.map(lengthMenuItem).join('')}
+        <div class="filter-menu-divider"></div>
+        <button class="filter-menu-item" id="calmOnlyItem" role="menuitemcheckbox" aria-checked="false">
+          <span class="filter-item-icon">🤍</span>
+          <span>قلوب مفتوحة فقط</span>
+        </button>
       </div>
     </div>
 
@@ -259,6 +264,7 @@ function initEverything(): void {
       nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
       lengthToggle: document.getElementById('lengthToggle') as HTMLButtonElement,
       lengthMenu: document.getElementById('lengthMenu')!,
+      calmOnlyItem: document.getElementById('calmOnlyItem') as HTMLButtonElement,
       statDrawn: document.getElementById('statDrawn')!,
       statHearts: document.getElementById('statHearts')!,
       heartPop: document.getElementById('heartPop')!,

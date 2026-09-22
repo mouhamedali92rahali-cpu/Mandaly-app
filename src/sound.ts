@@ -79,8 +79,11 @@ interface Tone {
   type?: OscillatorType;
 }
 
-function playTones(tones: Tone[]): void {
-  if (sfxMuted) return;
+// The heart button's sound is exempt from the SFX mute — it marks a rare,
+// deliberately-chosen family moment rather than routine feedback like a card
+// flip or a timer tick, so playHeart() calls this directly and skips the
+// mute check that playTones() applies for everything else.
+function playTonesUnconditionally(tones: Tone[]): void {
   const audio = getContext();
   if (!audio) return;
   const now = audio.currentTime;
@@ -98,6 +101,11 @@ function playTones(tones: Tone[]): void {
     osc.start(at);
     osc.stop(at + t.duration + 0.02);
   }
+}
+
+function playTones(tones: Tone[]): void {
+  if (sfxMuted) return;
+  playTonesUnconditionally(tones);
 }
 
 function loadFlipBuffer(audio: AudioContext): Promise<AudioBuffer> {
@@ -134,10 +142,11 @@ export function playFlip(): void {
  * Celebratory fanfare for the "family heart" button: a warm two-note pad
  * underneath, an ascending arpeggio building energy, landing on a bright
  * triumphant chord, then a few high triangle-wave sparkle notes on top —
- * like a little burst of confetti.
+ * like a little burst of confetti. Always plays, even with SFX muted — see
+ * playTonesUnconditionally().
  */
 export function playHeart(): void {
-  playTones([
+  playTonesUnconditionally([
     // warm low pad underneath, for a fuller/rounder "togetherness" feel
     { freq: 392.0, start: 0, duration: 0.7, peak: 0.07, type: 'sine' }, // G4
     { freq: 261.63, start: 0, duration: 0.7, peak: 0.05, type: 'sine' }, // C4

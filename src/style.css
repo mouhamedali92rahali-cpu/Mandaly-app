@@ -241,6 +241,11 @@ body {
   background: rgba(227, 200, 118, 0.16);
   color: var(--gold-soft);
 }
+.filter-menu-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: rgba(227, 200, 118, 0.2);
+}
 .filter-item-icon {
   display: flex;
   align-items: center;
