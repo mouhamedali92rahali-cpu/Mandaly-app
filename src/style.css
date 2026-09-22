@@ -634,8 +634,12 @@ body {
      overflow is non-visible — without this, card-text silently grows past
      its allocated share to fit whatever font size is being tried, which
      makes clientHeight self-referential and defeats the shrink-to-fit
-     measurement in game.ts entirely. */
-  overflow-y: auto;
+     measurement in game.ts entirely. `hidden` rather than `auto`: the JS
+     search already keeps its pick within this box (with a safety margin),
+     so there's nothing to scroll — `auto` would just risk a stray
+     scrollbar track on a borderline card where the estimate is a pixel or
+     two off from the real rendered height. */
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
   justify-content: safe center;

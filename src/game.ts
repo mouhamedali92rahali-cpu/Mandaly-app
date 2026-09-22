@@ -106,12 +106,19 @@ function countWrappedLines(cardText: HTMLElement): number {
   return lineTops.size;
 }
 
+// blockHeight is an estimate (lines × fontSize × lineHeight ratio) — real
+// text rendering can land a pixel or two taller than that estimate, so a
+// pick that only just "fits" can still clip against card-text's own
+// overflow: hidden. Leaving a small margin here is cheaper than chasing
+// sub-pixel accuracy in the estimate itself.
+const FIT_SAFETY_MARGIN = 0.97;
+
 function setCardText(cardText: HTMLElement, text: string): void {
   cardText.textContent = text;
   // The flex-allocated height stays the same across every font size tried
   // (card-text's sibling min-height is 0 inside the scrollable .face-front),
   // so it only needs to be read once, before the search starts.
-  const available = cardText.clientHeight;
+  const available = cardText.clientHeight * FIT_SAFETY_MARGIN;
 
   let chosenSize = MIN_FONT_SIZE;
   let chosenLineHeight = lineHeightRatioFor(MIN_FONT_SIZE);
@@ -128,8 +135,8 @@ function setCardText(cardText: HTMLElement, text: string): void {
       break;
     }
     // Doesn't fit at this size — the loop tries the next, smaller one, and
-    // the smallest size is kept as a last-resort floor (the card itself
-    // still scrolls if even that overflows, same safety net as before).
+    // the smallest size is kept as a last-resort floor (card-text clips
+    // rather than overflowing the card itself in that rare case).
   }
 
   cardText.style.fontSize = `${chosenSize}px`;
