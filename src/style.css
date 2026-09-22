@@ -340,6 +340,12 @@ body {
   opacity: 1;
   transition: opacity 0.3s ease;
 }
+/* Same overlay styling as the welcome/rules flow, but on top of the
+   in-game heart-pop (z-index 50) — ending a session shortly after a heart
+   tap could otherwise still show its fading animation bleeding through. */
+#farewellOverlay {
+  z-index: 55;
+}
 .intro-overlay[hidden] {
   display: none;
 }
