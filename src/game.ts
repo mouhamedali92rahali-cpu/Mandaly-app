@@ -185,8 +185,8 @@ function setCardText(cardText: HTMLElement, text: string): void {
 }
 
 export function initGame(el: Elements, timer: Timer, onEndSession: () => void): Game {
-  // Defaults to the full bank; set from the "⋮" length menu.
-  let gameLength: GameLength = 'long';
+  // Defaults to a quick session; set from the "⋮" length menu.
+  let gameLength: GameLength = 'short';
 
   // Independent of length: a pure single-category mode for a calmer,
   // no-points, no-challenges session — bypasses the length ratios entirely
@@ -423,7 +423,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     // A dot on the "⋮" button is the only always-visible cue once a
     // non-default choice is active, since the menu itself stays closed
     // the rest of the time.
-    el.lengthToggle.classList.toggle('has-filter', calmOnly || gameLength !== 'long');
+    el.lengthToggle.classList.toggle('has-filter', calmOnly || gameLength !== 'short');
   }
 
   el.lengthMenu.addEventListener('click', (e) => {

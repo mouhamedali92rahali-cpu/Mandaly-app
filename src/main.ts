@@ -34,10 +34,10 @@ const LENGTH_OPTIONS = [
 
 const lengthMenuItem = (opt: (typeof LENGTH_OPTIONS)[number]) => `
   <button
-    class="filter-menu-item${opt.length === 'long' ? ' active' : ''}"
+    class="filter-menu-item${opt.length === 'short' ? ' active' : ''}"
     data-length="${opt.length}"
     role="menuitemradio"
-    aria-checked="${opt.length === 'long'}"
+    aria-checked="${opt.length === 'short'}"
   >
     <span class="filter-item-icon">${opt.icon}</span>
     <span>${opt.label} — ${opt.count} كرت</span>
@@ -298,7 +298,13 @@ function initEverything(): void {
       endBtn: document.getElementById('farewellEndBtn') as HTMLButtonElement,
     },
     () => game.notifySessionChanged(),
-    () => game.notifySessionChanged(),
+    // Ending the session needs to actually stop the game, not just clear
+    // the session state and leave the same interactive card on screen (the
+    // draw button and tapping the card both still worked, silently falling
+    // back to classic endless draws). A reload is the simplest way to get a
+    // genuinely clean slate — back to the welcome screen, deck/stats/session
+    // all reset — without hand-resetting every piece of state individually.
+    () => window.location.reload(),
   );
 
   const intro = initIntro(

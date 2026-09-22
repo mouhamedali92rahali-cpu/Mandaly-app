@@ -1,10 +1,10 @@
 import cardFlipUrl from './assets/card-flip.mp3';
 // "Intimate Piano" by The_Mountain — Pixabay Music (pixabay.com/music,
 // track id 252951), under the Pixabay Content License: free for
-// commercial use, no attribution required. Trimmed with a 1.5s fade-in /
-// 2.5s fade-out so the loop restart has no audible click (see game's
-// background-music feature — Mandaly-app history for the exact ffmpeg
-// command).
+// commercial use, no attribution required. Denoised (ffmpeg afftdn) to cut
+// the recording's own background hiss, audible in quiet rooms once looped
+// continuously, then trimmed with a 1.5s fade-in / 2.5s fade-out so the loop
+// restart has no audible click.
 import bgMusicUrl from './assets/bg-music.mp3';
 
 const SFX_MUTED_KEY = 'mandaly-muted';
