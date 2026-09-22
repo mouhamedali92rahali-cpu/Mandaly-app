@@ -55,59 +55,71 @@ body {
 .turn-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: min(320px, 82vw);
   margin: -8px 0 18px;
-  padding: 8px 8px 8px 14px;
-  border-radius: 16px;
-  border: 1.5px solid rgba(227, 200, 118, 0.35);
-  background: rgba(227, 200, 118, 0.08);
 }
-.turn-info {
+.turn-players {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px;
 }
-.turn-avatar {
+.turn-players::-webkit-scrollbar {
+  display: none;
+}
+.turn-chip {
+  all: unset;
+  box-sizing: border-box;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(227, 200, 118, 0.3);
+  background: rgba(227, 200, 118, 0.06);
+  cursor: pointer;
+}
+.turn-chip:active {
+  transform: scale(0.94);
+}
+.turn-chip-current {
+  border-color: var(--gold);
+  background: rgba(227, 200, 118, 0.18);
+}
+.turn-chip-avatar {
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: var(--gold);
   color: var(--navy-deep);
   font-family: 'Cairo', sans-serif;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 11px;
 }
-.turn-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.turn-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--gold-soft);
-  opacity: 0.8;
-}
-.turn-name {
+.turn-chip-name {
   font-family: 'Cairo', sans-serif;
-  font-weight: 800;
-  font-size: 13.5px;
+  font-weight: 700;
+  font-size: 12px;
   color: var(--cream);
+  max-width: 64px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.turn-score {
+.turn-chip-score {
   flex: none;
   font-weight: 800;
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--gold-soft);
 }
 .turn-end-btn {

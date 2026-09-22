@@ -29,6 +29,14 @@ export function hasSession(): boolean {
   return players.length > 0;
 }
 
+export function getPlayers(): Player[] {
+  return players;
+}
+
+export function getCurrentIndex(): number {
+  return currentIndex;
+}
+
 export function currentPlayer(): Player | null {
   return players[currentIndex] ?? null;
 }
@@ -40,6 +48,15 @@ export function advanceTurn(): void {
 
 export function awardPointToCurrent(): void {
   const player = currentPlayer();
+  if (player) player.score++;
+}
+
+// Whoever actually earned a card's point — guessed right, won a physical
+// challenge, and so on — is decided by the players themselves and isn't
+// necessarily whoever's turn it is to read the card, so scoring needs to be
+// assignable to any player, not just the current one.
+export function awardPointTo(index: number): void {
+  const player = players[index];
   if (player) player.score++;
 }
 

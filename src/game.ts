@@ -3,7 +3,16 @@ import { CATEGORY_ICONS, type CardCategory } from './data/categories';
 import { playFlip, playHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { shareCard } from './share';
-import { hasSession, currentPlayer, advanceTurn, awardPointToCurrent } from './players';
+import {
+  hasSession,
+  currentPlayer,
+  advanceTurn,
+  awardPointToCurrent,
+  awardPointTo,
+  getPlayers,
+  getCurrentIndex,
+  type Player,
+} from './players';
 import type { Timer } from './timer';
 
 const CATEGORIES: CardCategory[] = ['قلوب مفتوحة', 'حلبة العائلة', 'اقلب الطاولة'];
@@ -71,9 +80,7 @@ interface Elements {
   filterToggle: HTMLButtonElement;
   filterMenu: HTMLElement;
   turnBar: HTMLElement;
-  turnAvatar: HTMLElement;
-  turnName: HTMLElement;
-  turnScore: HTMLElement;
+  turnPlayers: HTMLElement;
   endSessionBtn: HTMLButtonElement;
 }
 
@@ -168,13 +175,43 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   // flip to the second player before the first player's own card even shows.
   let firstDrawPending = true;
 
+  // Whoever earned a card's point — guessed right, won a physical challenge —
+  // is a judgment call the players make themselves, and isn't necessarily
+  // whoever's turn it is to read the card. So every player gets their own
+  // tappable chip here (award a point to any of them directly), while
+  // highlighting stays reserved for showing whose *turn* it is to draw.
   function renderTurnBar(): void {
-    const player = hasSession() ? currentPlayer() : null;
-    el.turnBar.hidden = !player;
-    if (!player) return;
-    el.turnAvatar.textContent = player.name.trim().charAt(0).toUpperCase();
-    el.turnName.textContent = player.name;
-    el.turnScore.textContent = `${player.score} ❤️`;
+    const active = hasSession();
+    el.turnBar.hidden = !active;
+    if (!active) return;
+
+    const players = getPlayers();
+    const curIndex = getCurrentIndex();
+    el.turnPlayers.replaceChildren();
+
+    players.forEach((player, index) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'turn-chip';
+      if (index === curIndex) chip.classList.add('turn-chip-current');
+      chip.dataset.index = String(index);
+      chip.setAttribute('aria-label', `امنح نقطة لـ ${player.name}`);
+
+      const avatar = document.createElement('span');
+      avatar.className = 'turn-chip-avatar';
+      avatar.textContent = player.name.trim().charAt(0).toUpperCase();
+
+      const name = document.createElement('span');
+      name.className = 'turn-chip-name';
+      name.textContent = player.name;
+
+      const score = document.createElement('span');
+      score.className = 'turn-chip-score';
+      score.textContent = String(player.score);
+
+      chip.append(avatar, name, score);
+      el.turnPlayers.appendChild(chip);
+    });
   }
 
   function currentPool(): Card[] {
@@ -280,24 +317,36 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
 
   const HEART_POP_DEFAULT_TEXT = el.heartPopText.textContent ?? '';
 
-  el.heartBtn.addEventListener('click', () => {
+  // Shared by the heart button and by tapping any player's own chip — both
+  // are "give someone a point" moments and get the same celebration, just a
+  // different name in the popup (or the generic one, with no session).
+  function celebrateFor(player: Player | null): void {
     hearts++;
     el.statHearts.textContent = String(hearts);
-
-    const player = hasSession() ? currentPlayer() : null;
-    if (player) {
-      awardPointToCurrent();
-      renderTurnBar();
-      el.heartPopText.textContent = `أحسنت يا ${player.name}! ❤️`;
-    } else {
-      el.heartPopText.textContent = HEART_POP_DEFAULT_TEXT;
-    }
-
+    el.heartPopText.textContent = player ? `أحسنت يا ${player.name}! ❤️` : HEART_POP_DEFAULT_TEXT;
     el.heartPop.classList.remove('show');
     void el.heartPop.offsetWidth;
     el.heartPop.classList.add('show');
     playHeart();
     hapticHeart();
+  }
+
+  el.heartBtn.addEventListener('click', () => {
+    const player = hasSession() ? currentPlayer() : null;
+    if (player) {
+      awardPointToCurrent();
+      renderTurnBar();
+    }
+    celebrateFor(player);
+  });
+
+  el.turnPlayers.addEventListener('click', (e) => {
+    const chip = (e.target as HTMLElement).closest<HTMLElement>('.turn-chip');
+    if (!chip) return;
+    const index = Number(chip.dataset.index);
+    awardPointTo(index);
+    renderTurnBar();
+    celebrateFor(getPlayers()[index]);
   });
 
   const SHARE_ICON = el.shareBtn.textContent ?? '';

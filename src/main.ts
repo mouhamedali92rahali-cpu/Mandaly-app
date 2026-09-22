@@ -91,8 +91,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       ${cardCorners}
       <h2 class="intro-title">من يلعب اليوم؟</h2>
       <p class="intro-text">
-        سجّلوا الأسماء لتتبّع الأدوار والنقاط الفردية — أو تخطّوا هذه الخطوة للعب الكلاسيكي بعدّاد مشترك.
+        سجّلوا الأسماء لتتبّع الأدوار — أو تخطّوا هذه الخطوة للعب الكلاسيكي بعدّاد مشترك.
       </p>
+      <p class="intro-text">💡 خلال اللعب، اضغطوا على اسم أي لاعب في الشريط العلوي لمنحه نقطة عندما يستحقها.</p>
       <form id="playerForm" class="player-form">
         <label for="playerNameInput" class="sr-only">اسم اللاعب</label>
         <input
@@ -157,14 +158,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="wordmark">MANDALY</div>
 
     <div class="turn-bar" id="turnBar" hidden>
-      <div class="turn-info">
-        <span class="turn-avatar" id="turnAvatar"></span>
-        <div class="turn-text">
-          <span class="turn-label">دور</span>
-          <span class="turn-name" id="turnName"></span>
-        </div>
-      </div>
-      <span class="turn-score" id="turnScore"></span>
+      <div class="turn-players" id="turnPlayers"></div>
       <button class="turn-end-btn" id="endSessionBtn" aria-label="إنهاء الجلسة وعرض النتائج">إنهاء</button>
     </div>
 
@@ -265,9 +259,7 @@ function initEverything(): void {
       heartPop: document.getElementById('heartPop')!,
       heartPopText: document.getElementById('heartPopText')!,
       turnBar: document.getElementById('turnBar')!,
-      turnAvatar: document.getElementById('turnAvatar')!,
-      turnName: document.getElementById('turnName')!,
-      turnScore: document.getElementById('turnScore')!,
+      turnPlayers: document.getElementById('turnPlayers')!,
       endSessionBtn: document.getElementById('endSessionBtn') as HTMLButtonElement,
     },
     timer,
