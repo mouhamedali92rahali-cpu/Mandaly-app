@@ -54,6 +54,34 @@ function buildDrawOrder(cards: Card[]): Card[] {
   return order.reverse();
 }
 
+export type GameLength = 'short' | 'medium' | 'long';
+
+// Exact counts from the reviewed card bank's own category ratios (~5% اقلب
+// الطاولة / ~30% قلوب مفتوحة / ~65% حلبة العائلة). "long" asks for more than
+// any category actually has — selectCardsForLength() clamps that to "every
+// eligible card", so it stays correct even if the bank's size changes later.
+const LENGTH_TARGETS: Record<GameLength, Record<CardCategory, number>> = {
+  short: { 'اقلب الطاولة': 4, 'قلوب مفتوحة': 22, 'حلبة العائلة': 44 },
+  medium: { 'اقلب الطاولة': 7, 'قلوب مفتوحة': 46, 'حلبة العائلة': 97 },
+  long: { 'اقلب الطاولة': Infinity, 'قلوب مفتوحة': Infinity, 'حلبة العائلة': Infinity },
+};
+
+// Cards flagged "needs3" (e.g. one-against-the-group) genuinely don't work
+// below 3 players, so they're dropped from the pool up front whenever fewer
+// than 3 names are registered — including the classic no-session mode, where
+// the player count is unknown and 0 is the only safe assumption.
+function selectCardsForLength(pool: Card[], length: GameLength, excludeNeeds3: boolean): Card[] {
+  const eligible = excludeNeeds3 ? pool.filter((c) => !c.needs3) : pool;
+  const targets = LENGTH_TARGETS[length];
+  const selected: Card[] = [];
+  for (const cat of CATEGORIES) {
+    const catPool = shuffle(eligible.filter((c) => c.cat === cat));
+    const count = Math.min(targets[cat], catPool.length);
+    selected.push(...catPool.slice(0, count));
+  }
+  return selected;
+}
+
 interface Elements {
   card: HTMLElement;
   catBadge: HTMLElement;
@@ -68,8 +96,8 @@ interface Elements {
   statHearts: HTMLElement;
   heartPop: HTMLElement;
   heartPopText: HTMLElement;
-  filterToggle: HTMLButtonElement;
-  filterMenu: HTMLElement;
+  lengthToggle: HTMLButtonElement;
+  lengthMenu: HTMLElement;
   turnBar: HTMLElement;
   turnPlayers: HTMLElement;
   endSessionBtn: HTMLButtonElement;
@@ -156,9 +184,8 @@ function setCardText(cardText: HTMLElement, text: string): void {
 }
 
 export function initGame(el: Elements, timer: Timer, onEndSession: () => void): Game {
-  // null means drawing from all three categories; set from the "⋮" filter menu
-  // to restrict the pool to just one, e.g. a calmer "قلوب مفتوحة"-only session.
-  let activeFilter: CardCategory | null = null;
+  // Defaults to the full bank; set from the "⋮" length menu.
+  let gameLength: GameLength = 'long';
 
   // Whether the very next draw is the first one since a session (re)started —
   // that first card belongs to whoever the turn indicator already shows, so
@@ -206,7 +233,8 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   }
 
   function currentPool(): Card[] {
-    return activeFilter ? DECK.filter((card) => card.cat === activeFilter) : DECK;
+    const excludeNeeds3 = getPlayers().length < 3;
+    return selectCardsForLength(DECK, gameLength, excludeNeeds3);
   }
 
   let deck: Card[] = buildDrawOrder(currentPool());
@@ -352,50 +380,50 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     });
   });
 
-  function closeFilterMenu(): void {
-    el.filterMenu.hidden = true;
-    el.filterToggle.setAttribute('aria-expanded', 'false');
+  function closeLengthMenu(): void {
+    el.lengthMenu.hidden = true;
+    el.lengthToggle.setAttribute('aria-expanded', 'false');
   }
 
-  function openFilterMenu(): void {
-    el.filterMenu.hidden = false;
-    el.filterToggle.setAttribute('aria-expanded', 'true');
+  function openLengthMenu(): void {
+    el.lengthMenu.hidden = false;
+    el.lengthToggle.setAttribute('aria-expanded', 'true');
   }
 
-  el.filterToggle.addEventListener('click', (e) => {
+  el.lengthToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (el.filterMenu.hidden) openFilterMenu();
-    else closeFilterMenu();
+    if (el.lengthMenu.hidden) openLengthMenu();
+    else closeLengthMenu();
   });
 
-  el.filterMenu.addEventListener('click', (e) => {
+  el.lengthMenu.addEventListener('click', (e) => {
     const item = (e.target as HTMLElement).closest<HTMLElement>('.filter-menu-item');
     if (!item) return;
 
-    const value = item.dataset.filter!;
-    activeFilter = value === 'all' ? null : (value as CardCategory);
+    gameLength = item.dataset.length as GameLength;
 
-    for (const other of el.filterMenu.querySelectorAll('.filter-menu-item')) {
+    for (const other of el.lengthMenu.querySelectorAll('.filter-menu-item')) {
       const isActive = other === item;
       other.classList.toggle('active', isActive);
       other.setAttribute('aria-checked', String(isActive));
     }
-    // A dot on the "⋮" button is the only always-visible cue once a filter is
-    // active, since the menu itself stays closed the rest of the time.
-    el.filterToggle.classList.toggle('has-filter', activeFilter !== null);
+    // A dot on the "⋮" button is the only always-visible cue once a
+    // non-default length is chosen, since the menu itself stays closed
+    // the rest of the time.
+    el.lengthToggle.classList.toggle('has-filter', gameLength !== 'long');
 
     // Only affects the pool future draws come from — the card on screen and
     // history stay put until the next draw.
     deck = buildDrawOrder(currentPool());
-    closeFilterMenu();
+    closeLengthMenu();
   });
 
   document.addEventListener('click', (e) => {
-    if (!el.filterMenu.hidden && !el.filterMenu.contains(e.target as Node)) closeFilterMenu();
+    if (!el.lengthMenu.hidden && !el.lengthMenu.contains(e.target as Node)) closeLengthMenu();
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !el.filterMenu.hidden) closeFilterMenu();
+    if (e.key === 'Escape' && !el.lengthMenu.hidden) closeLengthMenu();
   });
 
   el.endSessionBtn.addEventListener('click', onEndSession);
@@ -406,6 +434,10 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     notifySessionChanged(): void {
       firstDrawPending = true;
       renderTurnBar();
+      // initGame() runs (and builds the initial deck) before any players
+      // exist — the needs3 pool check only sees the real registered count
+      // from here on, once a session actually starts or restarts.
+      deck = buildDrawOrder(currentPool());
     },
   };
 }

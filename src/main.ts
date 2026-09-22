@@ -26,10 +26,21 @@ const categoryRow = (cat: keyof typeof CATEGORY_ICONS, desc: string) => `
   </div>
 `;
 
-const filterMenuItem = (cat: keyof typeof CATEGORY_ICONS) => `
-  <button class="filter-menu-item" data-filter="${cat}" role="menuitemradio" aria-checked="false">
-    <span class="filter-item-icon">${CATEGORY_ICONS[cat]}</span>
-    <span>${cat}</span>
+const LENGTH_OPTIONS = [
+  { length: 'short', icon: '⏱️', label: 'قصيرة', count: 70 },
+  { length: 'medium', icon: '⏳', label: 'متوسطة', count: 150 },
+  { length: 'long', icon: '🌙', label: 'طويلة', count: 199 },
+] as const;
+
+const lengthMenuItem = (opt: (typeof LENGTH_OPTIONS)[number]) => `
+  <button
+    class="filter-menu-item${opt.length === 'long' ? ' active' : ''}"
+    data-length="${opt.length}"
+    role="menuitemradio"
+    aria-checked="${opt.length === 'long'}"
+  >
+    <span class="filter-item-icon">${opt.icon}</span>
+    <span>${opt.label} — ${opt.count} كرت</span>
   </button>
 `;
 
@@ -77,7 +88,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       ${categoryRow('قلوب مفتوحة', 'حديث واستماع، بلا نقاط، بلا فوز أو خسارة')}
       ${categoryRow('حلبة العائلة', 'تخمين وتحدٍّ، بنقاط فردية بسيطة')}
       ${categoryRow('اقلب الطاولة', 'يغيّر قواعد البطاقة القادمة، لمفاجأة خفيفة')}
-      <p class="intro-text">💡 يمكنكم أيضًا اختيار فئة واحدة فقط للسحب منها، من قائمة "⋮" أعلى الشاشة.</p>
+      <p class="intro-text">💡 يمكنكم أيضًا اختيار طول اللعبة (قصيرة/متوسطة/طويلة) من قائمة "⋮" أعلى الشاشة.</p>
       <p class="intro-text">اسحبوا بطاقة، اقرؤوها بصوت عالٍ، وطبّقوها معًا.</p>
       <p class="intro-text">وفي أي لحظة تشعرون فيها بالدفء أو الضحك، قولوا: "قلب لهذه اللحظة!" ❤️</p>
       <label class="intro-checkbox-row" id="dontShowAgainRow">
@@ -143,15 +154,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
 
     <div class="top-controls-right">
-      <button class="icon-btn" id="filterToggle" aria-haspopup="true" aria-expanded="false" aria-label="اختيار فئة السحب">⋮</button>
-      <div class="filter-menu" id="filterMenu" role="menu" hidden>
-        <button class="filter-menu-item active" data-filter="all" role="menuitemradio" aria-checked="true">
-          <span class="filter-item-icon">🎴</span>
-          <span>الكل</span>
-        </button>
-        ${filterMenuItem('قلوب مفتوحة')}
-        ${filterMenuItem('حلبة العائلة')}
-        ${filterMenuItem('اقلب الطاولة')}
+      <button class="icon-btn" id="lengthToggle" aria-haspopup="true" aria-expanded="false" aria-label="اختيار طول اللعبة">⋮</button>
+      <div class="filter-menu" id="lengthMenu" role="menu" hidden>
+        ${LENGTH_OPTIONS.map(lengthMenuItem).join('')}
       </div>
     </div>
 
@@ -252,8 +257,8 @@ function initEverything(): void {
       shareBtn: document.getElementById('shareBtn') as HTMLButtonElement,
       prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
       nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
-      filterToggle: document.getElementById('filterToggle') as HTMLButtonElement,
-      filterMenu: document.getElementById('filterMenu')!,
+      lengthToggle: document.getElementById('lengthToggle') as HTMLButtonElement,
+      lengthMenu: document.getElementById('lengthMenu')!,
       statDrawn: document.getElementById('statDrawn')!,
       statHearts: document.getElementById('statHearts')!,
       heartPop: document.getElementById('heartPop')!,
