@@ -2,7 +2,8 @@ import './style.css';
 import { initGame } from './game';
 import { initInstallPrompt } from './install';
 import { initFontToggle } from './font';
-import { initMuteToggle } from './mute';
+import { initSoundMenu } from './soundMenu';
+import { resumeMusicIfEnabled } from './sound';
 import { initTimer } from './timer';
 import { initIntro } from './intro';
 import { initActivationGate } from './activation';
@@ -88,7 +89,19 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="app-shell" id="appShell" hidden>
     <div class="top-controls">
       <button class="icon-btn" id="fontToggle" aria-label="تبديل خط نص الأسئلة">Aa</button>
-      <button class="icon-btn" id="muteToggle" aria-label="كتم/تشغيل الصوت">🔊</button>
+      <div class="icon-menu-anchor">
+        <button class="icon-btn" id="soundToggle" aria-haspopup="true" aria-expanded="false" aria-label="إعدادات الصوت">🔊</button>
+        <div class="filter-menu sound-menu" id="soundMenu" role="menu" hidden>
+          <button class="filter-menu-item" id="sfxToggleItem" role="menuitemcheckbox" aria-checked="true">
+            <span class="filter-item-icon">🔔</span>
+            <span>المؤثرات الصوتية</span>
+          </button>
+          <button class="filter-menu-item" id="musicToggleItem" role="menuitemcheckbox" aria-checked="false">
+            <span class="filter-item-icon">🎵</span>
+            <span>الموسيقى الخلفية</span>
+          </button>
+        </div>
+      </div>
       <button class="icon-btn" id="helpBtn" aria-label="كيف نلعب؟">؟</button>
     </div>
 
@@ -204,18 +217,26 @@ function initEverything(): void {
   });
 
   initFontToggle(document.getElementById('fontToggle') as HTMLButtonElement);
-  initMuteToggle(document.getElementById('muteToggle') as HTMLButtonElement);
-
-  initIntro({
-    appShell: document.getElementById('appShell')!,
-    overlay: document.getElementById('introOverlay')!,
-    welcomePage: document.getElementById('introWelcome')!,
-    rulesPage: document.getElementById('introRules')!,
-    startBtn: document.getElementById('introStartBtn') as HTMLButtonElement,
-    dontShowAgainRow: document.getElementById('dontShowAgainRow')!,
-    dontShowAgain: document.getElementById('dontShowAgain') as HTMLInputElement,
-    helpBtn: document.getElementById('helpBtn') as HTMLButtonElement,
+  initSoundMenu({
+    toggle: document.getElementById('soundToggle') as HTMLButtonElement,
+    menu: document.getElementById('soundMenu')!,
+    sfxItem: document.getElementById('sfxToggleItem') as HTMLButtonElement,
+    musicItem: document.getElementById('musicToggleItem') as HTMLButtonElement,
   });
+
+  initIntro(
+    {
+      appShell: document.getElementById('appShell')!,
+      overlay: document.getElementById('introOverlay')!,
+      welcomePage: document.getElementById('introWelcome')!,
+      rulesPage: document.getElementById('introRules')!,
+      startBtn: document.getElementById('introStartBtn') as HTMLButtonElement,
+      dontShowAgainRow: document.getElementById('dontShowAgainRow')!,
+      dontShowAgain: document.getElementById('dontShowAgain') as HTMLInputElement,
+      helpBtn: document.getElementById('helpBtn') as HTMLButtonElement,
+    },
+    resumeMusicIfEnabled,
+  );
 }
 
 initActivationGate(

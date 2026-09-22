@@ -88,7 +88,8 @@ body {
   opacity: 0.3;
   pointer-events: none;
 }
-.icon-btn.has-filter::after {
+.icon-btn.has-filter::after,
+.icon-btn.has-music::after {
   content: '';
   position: absolute;
   top: 1px;
@@ -98,6 +99,17 @@ body {
   border-radius: 50%;
   background: var(--gold);
   border: 1.5px solid var(--navy-deep);
+}
+
+.icon-menu-anchor {
+  position: relative;
+}
+/* Extra class in the selector, not just source order, so this reliably
+   overrides .filter-menu's right:0 (same specificity would otherwise
+   depend on which rule happens to come later in the file). */
+.filter-menu.sound-menu {
+  left: 0;
+  right: auto;
 }
 
 .filter-menu[hidden] {

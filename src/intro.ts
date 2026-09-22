@@ -29,7 +29,7 @@ export interface IntroElements {
   helpBtn: HTMLButtonElement;
 }
 
-export function initIntro(el: IntroElements): void {
+export function initIntro(el: IntroElements, onReveal?: () => void): void {
   // The help button can reopen the rules page any time after onboarding is
   // done; when it does, the button reads "إغلاق" and just dismisses the
   // overlay instead of revealing the game (which is already showing).
@@ -52,6 +52,11 @@ export function initIntro(el: IntroElements): void {
     el.appShell.hidden = false;
     void el.appShell.offsetWidth;
     el.appShell.classList.add('shell-visible');
+    // Always reached from a real click handler (the overlay tap or the
+    // start button), so this is a safe, gesture-backed place to resume
+    // background music if it was left on from a previous visit — audio
+    // playback started outside a user gesture gets blocked by the browser.
+    onReveal?.();
   }
 
   function goToRulesPage(): void {
