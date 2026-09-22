@@ -3,16 +3,7 @@ import { CATEGORY_ICONS, type CardCategory } from './data/categories';
 import { playFlip, playHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { shareCard } from './share';
-import {
-  hasSession,
-  currentPlayer,
-  advanceTurn,
-  awardPointToCurrent,
-  awardPointTo,
-  getPlayers,
-  getCurrentIndex,
-  type Player,
-} from './players';
+import { hasSession, advanceTurn, awardPointTo, getPlayers, getCurrentIndex } from './players';
 import type { Timer } from './timer';
 
 const CATEGORIES: CardCategory[] = ['قلوب مفتوحة', 'حلبة العائلة', 'اقلب الطاولة'];
@@ -317,13 +308,13 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
 
   const HEART_POP_DEFAULT_TEXT = el.heartPopText.textContent ?? '';
 
-  // Shared by the heart button and by tapping any player's own chip — both
-  // are "give someone a point" moments and get the same celebration, just a
-  // different name in the popup (or the generic one, with no session).
-  function celebrateFor(player: Player | null): void {
-    hearts++;
-    el.statHearts.textContent = String(hearts);
-    el.heartPopText.textContent = player ? `أحسنت يا ${player.name}! ❤️` : HEART_POP_DEFAULT_TEXT;
+  // The pop animation itself (icon + text + sound + haptic) is shared, but
+  // what it means is not: the heart button is a family-wide "this moment
+  // mattered" expression, unrelated to any one player, while tapping a
+  // player's chip is a specific scoring decision. Keeping the button's own
+  // text generic — never a name — is the whole point of that distinction.
+  function playCelebrationPop(text: string): void {
+    el.heartPopText.textContent = text;
     el.heartPop.classList.remove('show');
     void el.heartPop.offsetWidth;
     el.heartPop.classList.add('show');
@@ -332,12 +323,9 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   }
 
   el.heartBtn.addEventListener('click', () => {
-    const player = hasSession() ? currentPlayer() : null;
-    if (player) {
-      awardPointToCurrent();
-      renderTurnBar();
-    }
-    celebrateFor(player);
+    hearts++;
+    el.statHearts.textContent = String(hearts);
+    playCelebrationPop(HEART_POP_DEFAULT_TEXT);
   });
 
   el.turnPlayers.addEventListener('click', (e) => {
@@ -346,7 +334,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     const index = Number(chip.dataset.index);
     awardPointTo(index);
     renderTurnBar();
-    celebrateFor(getPlayers()[index]);
+    playCelebrationPop(`أحسنت يا ${getPlayers()[index].name}! ❤️`);
   });
 
   const SHARE_ICON = el.shareBtn.textContent ?? '';

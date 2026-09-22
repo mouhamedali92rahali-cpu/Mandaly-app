@@ -37,18 +37,9 @@ export function getCurrentIndex(): number {
   return currentIndex;
 }
 
-export function currentPlayer(): Player | null {
-  return players[currentIndex] ?? null;
-}
-
 export function advanceTurn(): void {
   if (players.length === 0) return;
   currentIndex = (currentIndex + 1) % players.length;
-}
-
-export function awardPointToCurrent(): void {
-  const player = currentPlayer();
-  if (player) player.score++;
 }
 
 // Whoever actually earned a card's point — guessed right, won a physical
