@@ -204,6 +204,11 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   // whoever's turn it is to read the card. So every player gets their own
   // tappable chip here (award a point to any of them directly), while
   // highlighting stays reserved for showing whose *turn* it is to draw.
+  // Past this many players, a single scrollable row starts hiding names
+  // behind the "إنهاء" button, reachable only by swiping — switching to a
+  // smaller, wrapping two-row layout keeps every name visible at a glance.
+  const COMPACT_PLAYER_THRESHOLD = 4;
+
   function renderTurnBar(): void {
     const active = hasSession();
     el.turnBar.hidden = !active;
@@ -211,6 +216,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
 
     const players = getPlayers();
     const curIndex = getCurrentIndex();
+    el.turnBar.classList.toggle('compact', players.length > COMPACT_PLAYER_THRESHOLD);
     el.turnPlayers.replaceChildren();
 
     players.forEach((player, index) => {

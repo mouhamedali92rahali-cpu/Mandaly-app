@@ -122,6 +122,36 @@ body {
   font-size: 11.5px;
   color: var(--gold-soft);
 }
+/* Past COMPACT_PLAYER_THRESHOLD players, a single scrollable row starts
+   hiding names behind the "إنهاء" button. Wrapping into a smaller two-row
+   grid instead keeps every name visible without a swipe, and pulling the
+   bar closer to the wordmark keeps the extra row from pushing the card
+   stage down and feeling cramped. */
+.turn-bar.compact {
+  margin-top: -18px;
+}
+.turn-bar.compact .turn-players {
+  flex-wrap: wrap;
+  overflow: visible;
+  gap: 5px;
+}
+.turn-bar.compact .turn-chip {
+  padding: 4px 8px 4px 4px;
+  gap: 4px;
+}
+.turn-bar.compact .turn-chip-avatar {
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+}
+.turn-bar.compact .turn-chip-name {
+  font-size: 10.5px;
+  max-width: 44px;
+}
+.turn-bar.compact .turn-chip-score {
+  font-size: 10px;
+}
+
 .turn-end-btn {
   all: unset;
   box-sizing: border-box;
