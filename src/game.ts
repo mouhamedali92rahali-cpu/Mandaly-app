@@ -1,86 +1,13 @@
 import { DECK, type Card } from './data/deck';
-import { CATEGORY_ICONS, type CardCategory } from './data/categories';
+import { CATEGORY_ICONS } from './data/categories';
+import { buildSessionDeck, orderSessionCards, type GameLength } from './data/session';
 import { playFlip, playHeart, playFamilyHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { shareCard } from './share';
 import { hasSession, advanceTurn, awardPointTo, getPlayers, getCurrentIndex } from './players';
 import type { Timer } from './timer';
 
-const CATEGORIES: CardCategory[] = ['قلوب مفتوحة', 'حلبة العائلة', 'اقلب الطاولة'];
-const NO_REPEAT_EVER: CardCategory = 'اقلب الطاولة';
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-// Builds a draw order (last card first, so drawCard() can keep using deck.pop())
-// that keeps two "اقلب الطاولة" cards from ever landing back-to-back, and avoids
-// repeating the other two categories back-to-back whenever an alternative exists.
-function buildDrawOrder(cards: Card[]): Card[] {
-  const groups = new Map<CardCategory, Card[]>(CATEGORIES.map((cat) => [cat, []]));
-  for (const card of cards) groups.get(card.cat)!.push(card);
-  for (const cat of CATEGORIES) groups.set(cat, shuffle(groups.get(cat)!));
-
-  const remaining = () => CATEGORIES.reduce((sum, cat) => sum + groups.get(cat)!.length, 0);
-  const order: Card[] = [];
-  let lastCat: CardCategory | null = null;
-
-  while (remaining() > 0) {
-    let candidates = CATEGORIES.filter((cat) => groups.get(cat)!.length > 0);
-
-    const withoutFlipRepeat = candidates.filter(
-      (cat) => !(lastCat === NO_REPEAT_EVER && cat === NO_REPEAT_EVER),
-    );
-    if (withoutFlipRepeat.length > 0) candidates = withoutFlipRepeat;
-
-    const withoutAnyRepeat = candidates.filter((cat) => cat !== lastCat);
-    if (withoutAnyRepeat.length > 0) candidates = withoutAnyRepeat;
-
-    // Among the valid options, favor whichever category still has the most cards
-    // left, so a large category never gets cornered into forced repeats later.
-    const maxCount = Math.max(...candidates.map((cat) => groups.get(cat)!.length));
-    const top = candidates.filter((cat) => groups.get(cat)!.length === maxCount);
-    const chosen = top[Math.floor(Math.random() * top.length)];
-
-    order.push(groups.get(chosen)!.pop()!);
-    lastCat = chosen;
-  }
-
-  return order.reverse();
-}
-
-export type GameLength = 'short' | 'medium' | 'long';
-
-// Exact counts from the reviewed card bank's own category ratios (~5% اقلب
-// الطاولة / ~30% قلوب مفتوحة / ~65% حلبة العائلة). "long" asks for more than
-// any category actually has — selectCardsForLength() clamps that to "every
-// eligible card", so it stays correct even if the bank's size changes later.
-const LENGTH_TARGETS: Record<GameLength, Record<CardCategory, number>> = {
-  short: { 'اقلب الطاولة': 4, 'قلوب مفتوحة': 22, 'حلبة العائلة': 44 },
-  medium: { 'اقلب الطاولة': 7, 'قلوب مفتوحة': 46, 'حلبة العائلة': 97 },
-  long: { 'اقلب الطاولة': Infinity, 'قلوب مفتوحة': Infinity, 'حلبة العائلة': Infinity },
-};
-
-// Cards flagged "needs3" (e.g. one-against-the-group) genuinely don't work
-// below 3 players, so they're dropped from the pool up front whenever fewer
-// than 3 names are registered — including the classic no-session mode, where
-// the player count is unknown and 0 is the only safe assumption.
-function selectCardsForLength(pool: Card[], length: GameLength, excludeNeeds3: boolean): Card[] {
-  const eligible = excludeNeeds3 ? pool.filter((c) => !c.needs3) : pool;
-  const targets = LENGTH_TARGETS[length];
-  const selected: Card[] = [];
-  for (const cat of CATEGORIES) {
-    const catPool = shuffle(eligible.filter((c) => c.cat === cat));
-    const count = Math.min(targets[cat], catPool.length);
-    selected.push(...catPool.slice(0, count));
-  }
-  return selected;
-}
+export type { GameLength };
 
 interface Elements {
   card: HTMLElement;
@@ -244,13 +171,13 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     });
   }
 
-  function currentPool(): Card[] {
-    if (calmOnly) return DECK.filter((c) => c.cat === 'قلوب مفتوحة');
+  function buildDeck(): Card[] {
+    if (calmOnly) return orderSessionCards(DECK.filter((c) => c.cat === 'قلوب مفتوحة'));
     const excludeNeeds3 = getPlayers().length < 3;
-    return selectCardsForLength(DECK, gameLength, excludeNeeds3);
+    return buildSessionDeck(DECK, gameLength, excludeNeeds3);
   }
 
-  let deck: Card[] = buildDrawOrder(currentPool());
+  let deck: Card[] = buildDeck();
   let drawn = 0;
   let hearts = 0;
 
@@ -264,7 +191,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   let currentCard: Card | null = null;
 
   function resetDeck(): void {
-    deck = buildDrawOrder(currentPool());
+    deck = buildDeck();
   }
 
   function updateNavButtons(): void {
@@ -447,7 +374,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     refreshLengthMenuUi();
     // Only affects the pool future draws come from — the card on screen and
     // history stay put until the next draw.
-    deck = buildDrawOrder(currentPool());
+    deck = buildDeck();
     closeLengthMenu();
   });
 
@@ -470,7 +397,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
       // initGame() runs (and builds the initial deck) before any players
       // exist — the needs3 pool check only sees the real registered count
       // from here on, once a session actually starts or restarts.
-      deck = buildDrawOrder(currentPool());
+      deck = buildDeck();
     },
   };
 }
