@@ -725,10 +725,13 @@ body {
 
 /* Small popup with manual install steps, anchored under the ⬇️ icon button
    (same positioning pattern as .filter-menu) -- shown on tap only when the
-   browser hasn't offered a real one-tap install prompt. */
+   browser hasn't offered a real one-tap install prompt. Centered under the
+   button rather than left/right-aligned, since this button sits in the
+   middle of the nav row rather than at an edge. */
 .install-hint {
-  left: 0;
+  left: 50%;
   right: auto;
+  transform: translateX(-50%);
   width: max(220px, 60vw);
   padding: 12px 14px;
   color: var(--gold-soft);

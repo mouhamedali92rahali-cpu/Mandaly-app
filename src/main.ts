@@ -162,10 +162,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         </div>
       </div>
       <button class="icon-btn" id="helpBtn" aria-label="كيف نلعب؟">؟</button>
-      <div class="icon-menu-anchor">
-        <button class="icon-btn" id="installBtn" aria-label="تثبيت التطبيق على الهاتف">⬇️</button>
-        <div class="filter-menu install-hint" id="installHint" role="note" hidden></div>
-      </div>
     </div>
 
     <div class="top-controls-right">
@@ -218,7 +214,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
     <div class="nav-row">
       <button class="btn-nav" id="prevBtn" aria-label="الكرت السابق" disabled>‹ السابق</button>
-      <button class="icon-btn" id="shareBtn" aria-label="مشاركة هذا السؤال" disabled>📤</button>
+      <div class="icon-menu-anchor">
+        <button class="icon-btn" id="installBtn" aria-label="تثبيت التطبيق على الهاتف">⬇️</button>
+        <div class="filter-menu install-hint" id="installHint" role="note" hidden></div>
+      </div>
       <button class="btn-nav" id="nextBtn" aria-label="الكرت التالي" disabled>التالي ›</button>
     </div>
 
@@ -269,7 +268,6 @@ function initEverything(): void {
       cardText: document.getElementById('cardText')!,
       drawBtn: document.getElementById('drawBtn')!,
       heartBtn: document.getElementById('heartBtn')!,
-      shareBtn: document.getElementById('shareBtn') as HTMLButtonElement,
       prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
       nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
       lengthToggle: document.getElementById('lengthToggle') as HTMLButtonElement,

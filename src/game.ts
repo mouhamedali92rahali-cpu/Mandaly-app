@@ -3,7 +3,6 @@ import { CATEGORY_ICONS } from './data/categories';
 import { buildSessionDeck, orderSessionCards, type GameLength } from './data/session';
 import { playFlip, playHeart, playFamilyHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
-import { shareCard } from './share';
 import { hasSession, advanceTurn, awardPointTo, getPlayers, getCurrentIndex } from './players';
 import type { Timer } from './timer';
 
@@ -16,7 +15,6 @@ interface Elements {
   cardText: HTMLElement;
   drawBtn: HTMLElement;
   heartBtn: HTMLElement;
-  shareBtn: HTMLButtonElement;
   prevBtn: HTMLButtonElement;
   nextBtn: HTMLButtonElement;
   statDrawn: HTMLElement;
@@ -186,10 +184,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   const history: Card[] = [];
   let historyIndex = -1;
 
-  // The card currently showing, so the share button knows what to share and
-  // stays disabled on the card back / the "deck reshuffled" filler screen.
-  let currentCard: Card | null = null;
-
   function resetDeck(): void {
     deck = buildDeck();
   }
@@ -201,7 +195,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     // a new card — so it's only ever disabled before the very first draw,
     // never in a state that needs explaining.
     el.nextBtn.disabled = historyIndex < 0;
-    el.shareBtn.disabled = currentCard === null;
   }
 
   function flipTo(render: () => void): void {
@@ -214,7 +207,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   }
 
   function showCard(card: Card): void {
-    currentCard = card;
     flipTo(() => {
       el.catBadge.innerHTML = CATEGORY_ICONS[card.cat];
       el.catLabel.textContent = card.cat;
@@ -234,7 +226,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
         return;
       }
 
-      currentCard = null;
       flipTo(() => {
         el.catLabel.textContent = '';
         el.catBadge.innerHTML = '';
@@ -244,7 +235,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
       resetDeck();
       drawn = 0;
       el.statDrawn.textContent = String(drawn);
-      el.shareBtn.disabled = true;
       return;
     }
 
@@ -312,21 +302,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     renderTurnBar();
     showCelebrationPop(`أحسنت يا ${getPlayers()[index].name}! ❤️`);
     playHeart();
-  });
-
-  const SHARE_ICON = el.shareBtn.textContent ?? '';
-  let shareFeedbackTimer: number | undefined;
-
-  el.shareBtn.addEventListener('click', () => {
-    if (!currentCard) return;
-    void shareCard(currentCard.text).then((result) => {
-      if (result !== 'copied') return;
-      window.clearTimeout(shareFeedbackTimer);
-      el.shareBtn.textContent = '✅';
-      shareFeedbackTimer = window.setTimeout(() => {
-        el.shareBtn.textContent = SHARE_ICON;
-      }, 1400);
-    });
   });
 
   function closeLengthMenu(): void {
