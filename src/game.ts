@@ -184,10 +184,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   const history: Card[] = [];
   let historyIndex = -1;
 
-  function resetDeck(): void {
-    deck = buildDeck();
-  }
-
   function updateNavButtons(): void {
     el.prevBtn.disabled = historyIndex <= 0;
     // "Next" always has something to do once a card has been drawn: step
@@ -221,24 +217,11 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
 
   function drawCard(): void {
     if (deck.length === 0) {
-      // A player session has a defined size (the chosen game length) —
-      // running out of cards IS finishing it, so it goes straight to the
-      // standings instead of the classic "shuffle again" filler, which
-      // only makes sense for the open-ended no-session mode.
-      if (hasSession()) {
-        onEndSession();
-        return;
-      }
-
-      flipTo(() => {
-        el.catLabel.textContent = '';
-        el.catBadge.innerHTML = '';
-        setCardText(el.cardText, 'خلصت كل الكروت — اضغطوا مرة أخرى للخلط من جديد');
-      });
-      timer.setCard(undefined);
-      resetDeck();
-      drawn = 0;
-      el.statDrawn.textContent = String(drawn);
+      // Every deck now has a defined size (the chosen game length), with or
+      // without registered players — running out of cards finishes the
+      // session, so this always goes to the closing screen instead of the
+      // old classic-mode "shuffle again" filler.
+      onEndSession();
       return;
     }
 
@@ -373,6 +356,18 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     notifySessionChanged(): void {
       firstDrawPending = true;
       renderTurnBar();
+      // Covers both a genuinely new session (already zeroed, so this is a
+      // no-op) and restarting from the closing screen ("🔁 جولة جديدة") —
+      // that one needs an actual reset, or the draw count would keep
+      // climbing past the previous round's total and "السابق" would still
+      // walk back into cards from before the restart.
+      drawn = 0;
+      el.statDrawn.textContent = String(drawn);
+      history.length = 0;
+      historyIndex = -1;
+      el.card.classList.remove('flipped');
+      timer.setCard(undefined);
+      updateNavButtons();
       // initGame() runs (and builds the initial deck) before any players
       // exist — the needs3 pool check only sees the real registered count
       // from here on, once a session actually starts or restarts.

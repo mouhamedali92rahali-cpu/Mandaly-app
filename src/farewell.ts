@@ -1,14 +1,20 @@
-import { getStandings, restartSession, endSession } from './players';
+import { getPlayers, getStandings, restartSession, endSession } from './players';
 import { playFarewellFanfare } from './sound';
 
 export interface FarewellElements {
   overlay: HTMLElement;
+  subtext: HTMLElement;
   standingsList: HTMLElement;
   restartBtn: HTMLButtonElement;
   endBtn: HTMLButtonElement;
 }
 
 const MEDALS = ['🥇', '🥈', '🥉'];
+
+const WITH_PLAYERS_SUBTEXT = 'شكرًا لأنكم قضيتم هذا الوقت معًا. إليكم نتائج هذه الجولة:';
+const CLASSIC_SUBTEXT = 'شكرًا لمشاركتكم في هذه الجلسة. نتمنى أن تكون التجربة أعجبتكم 🤍';
+const WITH_PLAYERS_RESTART_LABEL = '🔁 جولة جديدة بنفس اللاعبين';
+const CLASSIC_RESTART_LABEL = '🔁 جولة جديدة';
 
 export interface Farewell {
   show: () => void;
@@ -43,7 +49,15 @@ export function initFarewell(el: FarewellElements, onRestart: () => void, onEnd:
   }
 
   function show(): void {
-    renderStandings();
+    // The classic (no registered players) mode has no scores to show —
+    // just a generic thank-you instead of standings that would otherwise
+    // render as an empty list.
+    const withPlayers = getPlayers().length > 0;
+    el.subtext.textContent = withPlayers ? WITH_PLAYERS_SUBTEXT : CLASSIC_SUBTEXT;
+    el.standingsList.hidden = !withPlayers;
+    el.restartBtn.textContent = withPlayers ? WITH_PLAYERS_RESTART_LABEL : CLASSIC_RESTART_LABEL;
+    if (withPlayers) renderStandings();
+
     el.overlay.hidden = false;
     void el.overlay.offsetWidth;
     el.overlay.classList.remove('overlay-hidden');

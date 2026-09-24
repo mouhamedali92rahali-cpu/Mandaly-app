@@ -133,9 +133,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       ${cardCorners}
       <img class="intro-logo" src="${logoMark}" alt="Mandaly" />
       <h2 class="intro-title">جلسة تستحق أن تُروى ✨</h2>
-      <p class="intro-text">شكرًا لأنكم قضيتم هذا الوقت معًا. إليكم نتائج هذه الجولة:</p>
+      <p class="intro-text" id="farewellSubtext">شكرًا لأنكم قضيتم هذا الوقت معًا. إليكم نتائج هذه الجولة:</p>
       <div class="standings-list" id="standingsList"></div>
-      <button class="btn btn-primary" id="farewellRestartBtn">🔁 جولة جديدة بنفس اللاعبين</button>
+      <button class="btn btn-primary" id="farewellRestartBtn">🔁 جولة جديدة</button>
       <button class="btn btn-heart" id="farewellEndBtn">إنهاء الجلسة</button>
     </div>
   </div>
@@ -316,6 +316,7 @@ function initEverything(): void {
   farewell = initFarewell(
     {
       overlay: document.getElementById('farewellOverlay')!,
+      subtext: document.getElementById('farewellSubtext')!,
       standingsList: document.getElementById('standingsList')!,
       restartBtn: document.getElementById('farewellRestartBtn') as HTMLButtonElement,
       endBtn: document.getElementById('farewellEndBtn') as HTMLButtonElement,
