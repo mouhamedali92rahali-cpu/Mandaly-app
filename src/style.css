@@ -738,12 +738,17 @@ body {
   height: 21px;
 }
 
-/* Small popup with manual install steps, anchored under the ⬇️ icon button
-   (same positioning pattern as .filter-menu) -- shown on tap only when the
-   browser hasn't offered a real one-tap install prompt. Centered under the
-   button rather than left/right-aligned, since this button sits in the
-   middle of the nav row rather than at an edge. */
+/* Small popup with manual install steps, anchored above the ⬇️ icon button
+   (opening upward, unlike .filter-menu's default downward drop) -- the nav
+   row sits right above the draw/heart buttons with too little room below
+   it, so a downward popup here would sit on top of "اسحب كرت جديد" and
+   block it. Centered under the button rather than left/right-aligned,
+   since this button sits in the middle of the nav row rather than at an
+   edge. Shown on tap only when the browser hasn't offered a real one-tap
+   install prompt. */
 .install-hint {
+  top: auto;
+  bottom: calc(100% + 8px);
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -754,6 +759,11 @@ body {
   font-size: 12.5px;
   line-height: 1.7;
   text-align: center;
+  /* .card sits in the same stacking context with an explicit z-index: 2,
+     which paints above any z-index:auto positioned sibling regardless of
+     DOM order -- without this, the popup would render behind the card
+     instead of over it. */
+  z-index: 3;
 }
 
 .stage {
