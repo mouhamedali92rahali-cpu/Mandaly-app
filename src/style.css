@@ -938,6 +938,10 @@ body {
 .btn:active {
   transform: scale(0.97);
 }
+.btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
 .btn-primary {
   background: var(--gold);
   color: var(--navy-deep);

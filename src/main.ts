@@ -272,7 +272,7 @@ function initEverything(): void {
       catLabel: document.getElementById('catLabel')!,
       cardText: document.getElementById('cardText')!,
       drawBtn: document.getElementById('drawBtn')!,
-      heartBtn: document.getElementById('heartBtn')!,
+      heartBtn: document.getElementById('heartBtn') as HTMLButtonElement,
       prevBtn: document.getElementById('prevBtn') as HTMLButtonElement,
       nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
       lengthToggle: document.getElementById('lengthToggle') as HTMLButtonElement,

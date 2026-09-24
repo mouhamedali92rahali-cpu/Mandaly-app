@@ -14,7 +14,7 @@ interface Elements {
   catLabel: HTMLElement;
   cardText: HTMLElement;
   drawBtn: HTMLElement;
-  heartBtn: HTMLElement;
+  heartBtn: HTMLButtonElement;
   prevBtn: HTMLButtonElement;
   nextBtn: HTMLButtonElement;
   statDrawn: HTMLElement;
@@ -195,6 +195,10 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     // a new card — so it's only ever disabled before the very first draw,
     // never in a state that needs explaining.
     el.nextBtn.disabled = historyIndex < 0;
+    // "لهذه اللحظة" needs an actual moment (a drawn card) to refer to — stays
+    // disabled on the pre-first-draw card back, where a tap would otherwise
+    // register a heart with no real card behind it.
+    el.heartBtn.disabled = historyIndex < 0;
   }
 
   function flipTo(render: () => void): void {
