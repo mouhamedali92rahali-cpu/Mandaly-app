@@ -19,6 +19,11 @@ const cardCorners = `
   <span class="corner corner-br"></span>
 `;
 
+// Matches the gold-stroke style of CATEGORY_ICONS rather than relying on an
+// emoji glyph, whose color and weight aren't controllable and render flat/
+// dull on some devices.
+const DOWNLOAD_ICON = `<svg viewBox="0 0 80 80"><path d="M40 14 L40 52 M24 36 L40 54 L56 36 M18 66 L62 66" fill="none" stroke="#c9a24b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 const categoryRow = (cat: keyof typeof CATEGORY_ICONS, desc: string) => `
   <div class="intro-cat-row">
     <span class="cat-badge intro-cat-badge">${CATEGORY_ICONS[cat]}</span>
@@ -79,7 +84,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <p class="intro-text">هنا، تتحوّل اللحظات العادية إلى ذكريات تستحق أن تُروى.</p>
       <p class="intro-text">كل بطاقة تسحبونها تقرّبكم خطوة من بعضكم — سؤال يفتح بابًا، تحدٍّ يجمعكم على الضحك، ومفاجأة تكسر الروتين.</p>
       <p class="intro-text intro-text-emphasis">هذه ليست لعبة تُلعب لتُربح، بل جلسة تُعاش لتُتذكر.</p>
-      <p class="intro-text">💡 يمكنكم تثبيت Mandaly على هاتفكم كتطبيق حقيقي (أيقونة على الشاشة الرئيسية، ويعمل حتى بلا إنترنت) — زر ⬇️ أعلى الشاشة أثناء اللعب.</p>
+      <p class="intro-text">💡 يمكنكم تثبيت Mandaly على هاتفكم كتطبيق حقيقي (أيقونة على الشاشة الرئيسية، ويعمل حتى بلا إنترنت) — زر التنزيل الذهبي بين "السابق" و"التالي" أثناء اللعب.</p>
       <button class="btn btn-primary" id="introNextBtn">التالي</button>
     </div>
 
@@ -215,7 +220,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="nav-row">
       <button class="btn-nav" id="prevBtn" aria-label="الكرت السابق" disabled>‹ السابق</button>
       <div class="icon-menu-anchor">
-        <button class="icon-btn" id="installBtn" aria-label="تثبيت التطبيق على الهاتف">⬇️</button>
+        <button class="icon-btn install-btn" id="installBtn" aria-label="تثبيت التطبيق على الهاتف">${DOWNLOAD_ICON}</button>
         <div class="filter-menu install-hint" id="installHint" role="note" hidden></div>
       </div>
       <button class="btn-nav" id="nextBtn" aria-label="الكرت التالي" disabled>التالي ›</button>
