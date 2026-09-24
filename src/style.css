@@ -393,6 +393,12 @@ body {
 #farewellOverlay {
   z-index: 55;
 }
+/* Shown as farewellOverlay fades itself out (over 300ms) — needs to sit
+   above it so the goodbye screen doesn't flash in behind the still-fading
+   farewell page. */
+#goodbyeOverlay {
+  z-index: 56;
+}
 .intro-overlay[hidden] {
   display: none;
 }

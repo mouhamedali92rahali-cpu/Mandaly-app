@@ -134,6 +134,16 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
   </div>
 
+  <div class="intro-overlay" id="goodbyeOverlay" hidden>
+    <div class="intro-page active" id="goodbyePage">
+      ${cardCorners}
+      <img class="intro-logo" src="${logoMark}" alt="Mandaly" />
+      <h2 class="intro-title">إلى اللقاء 🤍</h2>
+      <p class="intro-text">شكرًا لكم على هذا الوقت الجميل معًا.</p>
+      <p class="intro-text intro-text-emphasis">يمكنكم إغلاق التطبيق الآن.</p>
+    </div>
+  </div>
+
   <div class="app-shell" id="appShell" hidden>
     <div class="top-controls">
       <button class="icon-btn" id="fontToggle" aria-label="تبديل خط نص الأسئلة">Aa</button>
@@ -290,6 +300,16 @@ function initEverything(): void {
     musicItem: document.getElementById('musicToggleItem') as HTMLButtonElement,
   });
 
+  // Ending the session (from the farewell page) is meant to feel final, not
+  // like an invitation to start over — a plain "close the app" isn't
+  // something a web page can actually do on its own (window.close() is
+  // blocked by every browser unless the tab was opened by a script), so
+  // this shows a last, non-interactive goodbye screen instead and leaves
+  // actually closing the tab/app to the player.
+  function showGoodbye(): void {
+    document.getElementById('goodbyeOverlay')!.hidden = false;
+  }
+
   farewell = initFarewell(
     {
       overlay: document.getElementById('farewellOverlay')!,
@@ -298,13 +318,7 @@ function initEverything(): void {
       endBtn: document.getElementById('farewellEndBtn') as HTMLButtonElement,
     },
     () => game.notifySessionChanged(),
-    // Ending the session needs to actually stop the game, not just clear
-    // the session state and leave the same interactive card on screen (the
-    // draw button and tapping the card both still worked, silently falling
-    // back to classic endless draws). A reload is the simplest way to get a
-    // genuinely clean slate — back to the welcome screen, deck/stats/session
-    // all reset — without hand-resetting every piece of state individually.
-    () => window.location.reload(),
+    showGoodbye,
   );
 
   const intro = initIntro(
