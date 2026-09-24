@@ -79,6 +79,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <p class="intro-text">هنا، تتحوّل اللحظات العادية إلى ذكريات تستحق أن تُروى.</p>
       <p class="intro-text">كل بطاقة تسحبونها تقرّبكم خطوة من بعضكم — سؤال يفتح بابًا، تحدٍّ يجمعكم على الضحك، ومفاجأة تكسر الروتين.</p>
       <p class="intro-text intro-text-emphasis">هذه ليست لعبة تُلعب لتُربح، بل جلسة تُعاش لتُتذكر.</p>
+      <p class="intro-text">💡 يمكنكم تثبيت Mandaly على هاتفكم كتطبيق حقيقي (أيقونة على الشاشة الرئيسية، ويعمل حتى بلا إنترنت) — زر ⬇️ أعلى الشاشة أثناء اللعب.</p>
       <button class="btn btn-primary" id="introNextBtn">التالي</button>
     </div>
 
@@ -161,6 +162,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         </div>
       </div>
       <button class="icon-btn" id="helpBtn" aria-label="كيف نلعب؟">؟</button>
+      <div class="icon-menu-anchor">
+        <button class="icon-btn" id="installBtn" aria-label="تثبيت التطبيق على الهاتف">⬇️</button>
+        <div class="filter-menu install-hint" id="installHint" role="note" hidden></div>
+      </div>
     </div>
 
     <div class="top-controls-right">
@@ -181,11 +186,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="turn-players" id="turnPlayers"></div>
       <button class="turn-end-btn" id="endSessionBtn" aria-label="إنهاء الجلسة وعرض النتائج">إنهاء</button>
     </div>
-
-    <button class="btn-install" id="installBtn" hidden>⬇️ ثبّت اللعبة على هاتفك</button>
-    <p class="ios-hint" id="iosHint" hidden>
-      📲 للتثبيت: اضغط زر المشاركة ⬆️ بالأسفل، ثم اختر "إضافة إلى الشاشة الرئيسية"
-    </p>
 
     <div class="stage" id="stage">
       <div class="stack-card s2"></div>
@@ -289,7 +289,7 @@ function initEverything(): void {
 
   initInstallPrompt({
     installBtn: document.getElementById('installBtn') as HTMLButtonElement,
-    iosHint: document.getElementById('iosHint')!,
+    installHint: document.getElementById('installHint')!,
   });
 
   initFontToggle(document.getElementById('fontToggle') as HTMLButtonElement);
