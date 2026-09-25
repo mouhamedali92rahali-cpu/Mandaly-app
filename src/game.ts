@@ -27,8 +27,10 @@ interface Elements {
   lengthMenu: HTMLElement;
   calmOnlyItem: HTMLButtonElement;
   treasureToggleItem: HTMLButtonElement;
+  treasureRulesOverlay: HTMLElement;
+  treasureRulesStartBtn: HTMLButtonElement;
   treasureBar: HTMLButtonElement;
-  treasureBarFill: HTMLElement;
+  treasureBarFill: SVGPathElement;
   treasureMapOverlay: HTMLElement;
   treasureMap: HTMLElement;
   treasureMapStatus: HTMLElement;
@@ -233,7 +235,9 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     if (!active) return;
     const { currentStep, pathLength } = treasure.getProgress();
     const pct = pathLength > 0 ? Math.min(100, (currentStep / pathLength) * 100) : 0;
-    el.treasureBarFill.style.width = `${pct}%`;
+    const total = el.treasureBarFill.getTotalLength();
+    el.treasureBarFill.style.strokeDasharray = `${total}`;
+    el.treasureBarFill.style.strokeDashoffset = `${total * (1 - pct / 100)}`;
   }
 
   // Hand-drawn winding route rather than a straight bar — a real map, per
@@ -511,8 +515,12 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
       if (calmOnly) treasure.setEnabled(false);
     } else if (item === el.treasureToggleItem) {
       if (treasure.isLocked()) return;
-      treasure.setEnabled(!treasure.isEnabled());
-      if (treasure.isEnabled()) calmOnly = false;
+      const turningOn = !treasure.isEnabled();
+      treasure.setEnabled(turningOn);
+      if (turningOn) {
+        calmOnly = false;
+        el.treasureRulesOverlay.hidden = false;
+      }
     } else if (item.dataset.length) {
       gameLength = item.dataset.length as GameLength;
     } else {
@@ -525,6 +533,10 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     deck = buildDeck();
     renderTreasureBar();
     closeLengthMenu();
+  });
+
+  el.treasureRulesStartBtn.addEventListener('click', () => {
+    el.treasureRulesOverlay.hidden = true;
   });
 
   el.treasureBar.addEventListener('click', () => {

@@ -170,20 +170,23 @@ body {
   font-size: 14px;
   opacity: 0.85;
 }
-.treasure-bar-track {
+.treasure-bar-svg {
   flex: 1;
-  height: 6px;
-  border-radius: 4px;
-  background: rgba(227, 200, 118, 0.15);
-  overflow: hidden;
+  height: 20px;
+  display: block;
+}
+.treasure-bar-line {
+  fill: none;
+  stroke: rgba(227, 200, 118, 0.2);
+  stroke-width: 3;
+  stroke-linecap: round;
 }
 .treasure-bar-fill {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: var(--gold);
-  border-radius: 4px;
-  transition: width 0.4s ease;
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
 }
 
 .turn-end-btn {

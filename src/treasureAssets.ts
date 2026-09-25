@@ -20,3 +20,12 @@ export const TREASURE_IMAGES = {
   doubleNext: sparkle,
   currentPosition: heartPin,
 };
+
+// A gentle wave (viewBox 0 0 300 20) for the small persistent strip above
+// the card, echoing the full map's winding route instead of a flat bar.
+// Starts at x=300 (right edge) so the RTL fill direction matches the main
+// map's — see renderTreasureBar()'s stroke-dashoffset math in game.ts.
+// Shared between main.ts (draws it) and game.ts (animates its fill) so
+// both always agree on the same curve.
+export const TREASURE_MINI_WAVE_D =
+  'M 300 10 Q 285 2, 270 10 T 240 10 T 210 10 T 180 10 T 150 10 T 120 10 T 90 10 T 60 10 T 30 10 T 0 10';

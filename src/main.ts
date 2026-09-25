@@ -10,6 +10,7 @@ import { initPlayerSetup } from './playerSetup';
 import { initFarewell, type Farewell } from './farewell';
 import { initActivationGate } from './activation';
 import { CATEGORY_ICONS } from './data/categories';
+import { TREASURE_MINI_WAVE_D } from './treasureAssets';
 import logoMark from './assets/logo-mark.png';
 
 const cardCorners = `
@@ -142,6 +143,19 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
   </div>
 
+  <div class="intro-overlay" id="treasureRulesOverlay" hidden>
+    <div class="intro-page active" id="treasureRulesPage">
+      ${cardCorners}
+      <h2 class="intro-title">🗺️ رحلة الكنز</h2>
+      <p class="intro-text">العائلة كلها تسير معًا نحو الكنز — لا فوز فردي، بل هدف مشترك.</p>
+      <p class="intro-text">🤍 قلوب مفتوحة و🔄 اقلب الطاولة: خطوة صغيرة بمجرد سحب الكرت.</p>
+      <p class="intro-text">🏅 حلبة العائلة: تقدّمكم الحقيقي يحدث فقط عند منح نقطة فعلية لأحدكم.</p>
+      <p class="intro-text">على المسار 3 مفاجآت (تراجع، قفزة، مضاعفة) و3 محطات تكشف كرتًا خاصًا.</p>
+      <p class="intro-text intro-text-emphasis">اضغطوا الشريط أعلى الشاشة في أي وقت لرؤية الخريطة كاملة.</p>
+      <button class="btn btn-primary" id="treasureRulesStartBtn">لنبدأ الرحلة!</button>
+    </div>
+  </div>
+
   <div class="intro-overlay" id="treasureMapOverlay" hidden>
     <div class="intro-page active" id="treasureMapPage">
       ${cardCorners}
@@ -201,7 +215,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
     <button class="treasure-bar" id="treasureBar" hidden aria-label="افتح خريطة رحلة الكنز">
       <span class="treasure-bar-icon">🗺️</span>
-      <span class="treasure-bar-track"><span class="treasure-bar-fill" id="treasureBarFill"></span></span>
+      <svg viewBox="0 0 300 20" class="treasure-bar-svg" preserveAspectRatio="none" aria-hidden="true">
+        <path d="${TREASURE_MINI_WAVE_D}" class="treasure-bar-line" />
+        <path d="${TREASURE_MINI_WAVE_D}" class="treasure-bar-fill" id="treasureBarFill" />
+      </svg>
       <span class="treasure-bar-icon">🔒</span>
     </button>
 
@@ -308,8 +325,10 @@ function initEverything(): void {
       lengthMenu: document.getElementById('lengthMenu')!,
       calmOnlyItem: document.getElementById('calmOnlyItem') as HTMLButtonElement,
       treasureToggleItem: document.getElementById('treasureToggleItem') as HTMLButtonElement,
+      treasureRulesOverlay: document.getElementById('treasureRulesOverlay')!,
+      treasureRulesStartBtn: document.getElementById('treasureRulesStartBtn') as HTMLButtonElement,
       treasureBar: document.getElementById('treasureBar') as HTMLButtonElement,
-      treasureBarFill: document.getElementById('treasureBarFill')!,
+      treasureBarFill: document.getElementById('treasureBarFill') as unknown as SVGPathElement,
       treasureMapOverlay: document.getElementById('treasureMapOverlay')!,
       treasureMap: document.getElementById('treasureMap')!,
       treasureMapStatus: document.getElementById('treasureMapStatus')!,
