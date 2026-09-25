@@ -61,7 +61,7 @@ try {
   const XY_RUN_LIMIT = 2;
 
   const ITER = 1000;
-  const LENGTHS = ['short', 'medium', 'long'];
+  const LENGTHS = ['veryShort', 'short', 'medium', 'long'];
   const PLAYER_COUNTS = [2, 3, 5];
 
   function analyzeOrder(cards) {

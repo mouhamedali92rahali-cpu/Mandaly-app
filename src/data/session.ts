@@ -1,7 +1,7 @@
 import { type Card } from './deck';
 import type { CardCategory } from './categories';
 
-export type GameLength = 'short' | 'medium' | 'long';
+export type GameLength = 'veryShort' | 'short' | 'medium' | 'long';
 
 const FLIP_CAT: CardCategory = 'اقلب الطاولة';
 const OPEN_CAT: CardCategory = 'قلوب مفتوحة';
@@ -9,10 +9,10 @@ const ARENA_CAT: CardCategory = 'حلبة العائلة';
 
 // "long" has no nominal cap — selectSessionCards() clamps it to every
 // eligible card, same idea as the old per-category Infinity targets.
-const NOMINAL_LENGTH: Record<GameLength, number> = { short: 70, medium: 150, long: Infinity };
+const NOMINAL_LENGTH: Record<GameLength, number> = { veryShort: 30, short: 70, medium: 150, long: Infinity };
 
 const FLIP_RATIO = 0.05;
-const XY_CAP_RATIO: Record<'short' | 'medium', number> = { short: 0.25, medium: 0.4 };
+const XY_CAP_RATIO: Record<'veryShort' | 'short' | 'medium', number> = { veryShort: 0.25, short: 0.25, medium: 0.4 };
 const OPEN_RATIO = 1 / 3;
 
 function shuffle<T>(arr: T[]): T[] {
@@ -28,11 +28,11 @@ function shuffle<T>(arr: T[]): T[] {
  * Picks which cards make up a session, in four pools by priority:
  * 1. اقلب الطاولة — ~5% of the session length.
  * 2. حلبة العائلة cards tagged mechanic: 'xy' (the "اختر لاعبًا: X أم Y؟"
- *    template) — capped at 25%/40% of a short/medium session so this, the
- *    deck's single most common template, can't dominate a session; "long"
- *    takes every xy card since it already takes everything else too. If the
- *    other pools can't fill the remaining slots on their own, the cap is
- *    raised just enough to make up the shortfall.
+ *    template) — capped at 25%/25%/40% of a very-short/short/medium session
+ *    so this, the deck's single most common template, can't dominate a
+ *    session; "long" takes every xy card since it already takes everything
+ *    else too. If the other pools can't fill the remaining slots on their
+ *    own, the cap is raised just enough to make up the shortfall.
  * 3. Everything else (دائرة الحديث + non-xy حلبة العائلة), aiming to keep
  *    قلوب مفتوحة close to a third of the session.
  * Selection within each pool is random, so which xy cards show up varies

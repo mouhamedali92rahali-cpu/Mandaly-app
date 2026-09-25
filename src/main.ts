@@ -32,6 +32,7 @@ const categoryRow = (cat: keyof typeof CATEGORY_ICONS, desc: string) => `
 `;
 
 const LENGTH_OPTIONS = [
+  { length: 'veryShort', icon: '⚡', label: 'قصيرة جدًا', count: 30 },
   { length: 'short', icon: '⏱️', label: 'قصيرة', count: 70 },
   { length: 'medium', icon: '⏳', label: 'متوسطة', count: 150 },
   { length: 'long', icon: '🌙', label: 'طويلة', count: 199 },
@@ -94,7 +95,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       ${categoryRow('قلوب مفتوحة', 'حديث واستماع، بلا نقاط، بلا فوز أو خسارة')}
       ${categoryRow('حلبة العائلة', 'تخمين وتحدٍّ، بنقاط فردية بسيطة')}
       ${categoryRow('اقلب الطاولة', 'يغيّر قواعد البطاقة القادمة، لمفاجأة خفيفة')}
-      <p class="intro-text">💡 يمكنكم أيضًا اختيار طول اللعبة (قصيرة/متوسطة/طويلة) من قائمة "⋮" أعلى الشاشة.</p>
+      <p class="intro-text">💡 يمكنكم أيضًا اختيار طول اللعبة (قصيرة جدًا/قصيرة/متوسطة/طويلة) من قائمة "⋮" أعلى الشاشة.</p>
       <p class="intro-text">اسحبوا بطاقة، اقرؤوها بصوت عالٍ، وطبّقوها معًا.</p>
       <p class="intro-text">وفي أي لحظة تشعرون فيها بالدفء أو الضحك، قولوا: "قلب لهذه اللحظة!" ❤️</p>
       <label class="intro-checkbox-row" id="dontShowAgainRow">
