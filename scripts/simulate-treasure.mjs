@@ -4,6 +4,16 @@
 // Used to pick the PATH_LENGTH constants in src/treasure.ts — aiming for
 // close to two-thirds of sessions succeeding, per length.
 //
+// Progress now comes from two triggers (src/treasure.ts's advanceOnDraw/
+// advanceOnPoint), not from card category alone: قلوب مفتوحة/اقلب الطاولة
+// give a small step on the draw itself, but حلبة العائلة only advances the
+// path when a point is actually awarded for it -- a human decision this
+// script can't observe from card content. POINT_AWARD_RATE below is a
+// modeling assumption (how often a drawn حلبة العائلة card ends up with an
+// actual point tap), not a measured constant -- real families will vary,
+// and that's the point of tying progress to points at all. Re-run this
+// after changing that assumption, DRAW_STEP, POINT_STEP, or the deck.
+//
 // Usage: node scripts/simulate-treasure.mjs
 
 import { execFileSync } from 'node:child_process';
@@ -45,13 +55,19 @@ try {
   const { buildSessionDeck } = require(join(tmpDir, 'data', 'session.js'));
   const treasure = require(join(tmpDir, 'treasure.js'));
 
+  const ARENA_CAT = 'حلبة العائلة';
+  // Assumption: a drawn حلبة العائلة card results in an actual point tap
+  // this often. Not every guess/challenge lands, and this is deliberately
+  // a bit conservative rather than assuming every card scores.
+  const POINT_AWARD_RATE = 0.6;
+
   const ITER = 3000;
   const LENGTHS = ['veryShort', 'short', 'medium', 'long'];
   const CANDIDATES = {
-    veryShort: [41],
-    short: [93],
-    medium: [199],
-    long: [259],
+    veryShort: [44],
+    short: [102],
+    medium: [220],
+    long: [296],
   };
 
   function runOne(length, pathLength) {
@@ -63,7 +79,10 @@ try {
     treasure.setEnabled(true);
 
     for (const card of drawOrder) {
-      treasure.advance(card.cat);
+      treasure.advanceOnDraw(card.cat);
+      if (card.cat === ARENA_CAT && Math.random() < POINT_AWARD_RATE) {
+        treasure.advanceOnPoint();
+      }
     }
     return treasure.getProgress().reachedTreasure;
   }

@@ -19,30 +19,37 @@ export interface TreasureEvent {
   delta: number;
 }
 
+export interface AdvanceResult {
+  event: TreasureEvent | null;
+  station: Station | null;
+  justReached: boolean;
+}
+
+const NO_RESULT: AdvanceResult = { event: null, station: null, justReached: false };
+
 // Tuned via scripts/simulate-treasure.mjs so that roughly two-thirds of
 // sessions reach the treasure by the time the deck runs out, for each game
-// length separately — see NOTES.md's رحلة الكنز section for the numbers.
+// length separately — see NOTES.md's رحلة الكنز section for the numbers
+// and the point-award-rate assumption the tuning is built on.
 const PATH_LENGTH: Record<GameLength, number> = {
-  veryShort: 41,
-  short: 93,
-  medium: 199,
-  long: 259,
+  veryShort: 44,
+  short: 102,
+  medium: 220,
+  long: 296,
 };
 
 const OPEN_CAT: CardCategory = 'قلوب مفتوحة';
+const FLIP_CAT: CardCategory = 'اقلب الطاولة';
 
-// selectSessionCards() fixes each category's *count* deterministically for a
-// given length (only which specific cards fill it is random) — so a flat
-// 2-steps/1-step rule would give every session of a given length the exact
-// same total, making "reach the treasure" an all-or-nothing cliff rather
-// than the ~two-thirds probability this is tuned for. Rolling around the
-// same averages (2 for قلوب مفتوحة, 1 for the rest) keeps the intended
-// per-category weighting while giving real session-to-session variance.
-function stepsFor(cat: CardCategory): number {
-  const r = Math.random();
-  if (cat === OPEN_CAT) return r < 0.2 ? 1 : r < 0.8 ? 2 : 3;
-  return r < 0.2 ? 0 : r < 0.8 ? 1 : 2;
-}
+// Just drawing a card isn't an accomplishment worth shared progress on its
+// own — قلوب مفتوحة and اقلب الطاولة have no "correct answer" to judge, so
+// they get a small fixed step for being drawn at all, while حلبة العائلة
+// (the only category with real points) contributes nothing on the draw
+// itself — only advanceOnPoint(), fired when a point is actually awarded,
+// moves the path for it. See advanceOnPoint()'s own comment for why this
+// isn't gated against the point-award mechanic being unverified.
+const DRAW_STEP = 1;
+const POINT_STEP = 3;
 
 let enabled = false;
 let locked = false;
@@ -118,20 +125,13 @@ export function configureWithPathLength(length: number): void {
   surprises = layout.surprises;
 }
 
-/** Advances the path for one drawn card of category `cat`. Returns the
- * surprise event triggered by this draw, if any (for the UI to announce),
- * the station just reached, if any (reveals a special card), plus whether
- * the treasure was just reached this call (so it's announced once, not on
- * every subsequent draw once already at/past the end). */
-export function advance(cat: CardCategory): {
-  event: TreasureEvent | null;
-  station: Station | null;
-  justReached: boolean;
-} {
-  if (!enabled || pathLength === 0) return { event: null, station: null, justReached: false };
+// Shared by both entry points below: applies `steps` (doubled if a ✨ tile
+// is pending), then checks for newly-crossed surprise tiles and stations.
+function applySteps(steps: number): AdvanceResult {
+  if (!enabled || pathLength === 0) return NO_RESULT;
+  if (steps === 0 && !doubleNextPending) return NO_RESULT;
 
   const wasAtEnd = currentStep >= pathLength;
-  let steps = stepsFor(cat);
   if (doubleNextPending) {
     steps *= 2;
     doubleNextPending = false;
@@ -152,10 +152,10 @@ export function advance(cat: CardCategory): {
         doubleNextPending = true;
         event = { kind: tile.kind, delta: 0 };
       }
-      // Only the first newly-triggered tile in a single draw fires — with
-      // ~1-2 steps per draw and tiles spread well apart, two tiles firing
-      // off one draw isn't reachable in practice, but this keeps the event
-      // shown to the player unambiguous if it ever were.
+      // Only the first newly-triggered tile in a single call fires — tiles
+      // are spread apart well beyond DRAW_STEP/POINT_STEP, so two firing
+      // off one call isn't reachable in practice, but this keeps whichever
+      // does show unambiguous if it ever were.
       break;
     }
   }
@@ -171,6 +171,24 @@ export function advance(cat: CardCategory): {
 
   const justReached = !wasAtEnd && currentStep >= pathLength;
   return { event, station, justReached };
+}
+
+/** Call once per card drawn — قلوب مفتوحة/اقلب الطاولة give a small step
+ * just for being drawn (see DRAW_STEP's comment); حلبة العائلة gives
+ * nothing here, only advanceOnPoint() moves the path for it. */
+export function advanceOnDraw(cat: CardCategory): AdvanceResult {
+  const steps = cat === OPEN_CAT || cat === FLIP_CAT ? DRAW_STEP : 0;
+  return applySteps(steps);
+}
+
+/** Call once per point actually awarded to a player (awardPointTo() in
+ * players.ts) — this is the real "answered correctly / earned it" signal
+ * the path is meant to reward. Point-awarding itself stays exactly as
+ * unverified as it already was (any player, any time, no check) — tying
+ * shared progress to it is an accepted, deliberate risk, not something
+ * this module tries to guard against. */
+export function advanceOnPoint(): AdvanceResult {
+  return applySteps(POINT_STEP);
 }
 
 export function getProgress(): {

@@ -5,6 +5,7 @@ import { playFlip, playHeart, playFamilyHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { hasSession, advanceTurn, awardPointTo, getPlayers, getCurrentIndex } from './players';
 import * as treasure from './treasure';
+import { TREASURE_IMAGES } from './treasureAssets';
 import type { Timer } from './timer';
 
 export type { GameLength };
@@ -199,6 +200,33 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     el.treasurePop.classList.add('show');
   }
 
+  // `popupDelayMs` staggers the treasure popup after a competing one:
+  // advanceOnPoint() fires right alongside showCelebrationPop() (the
+  // "أحسنت يا..." pop), and both are full-screen centered overlays that
+  // would otherwise land on top of each other at the exact same moment.
+  function handleTreasureResult(result: ReturnType<typeof treasure.advanceOnDraw>, popupDelayMs = 0): void {
+    renderTreasureBar();
+    if (!result.justReached && !result.station && !result.event) return;
+
+    const showPopup = () => {
+      // Reaching the treasure is the biggest news, so it wins if it
+      // happens alongside a station or surprise tile (rare, but possible
+      // with a jump3 tile right before the end).
+      if (result.justReached) {
+        showTreasurePop('🏆', 'وصلتم للكنز معًا! 🎉');
+      } else if (result.station) {
+        const openPool = DECK.filter((c) => c.cat === 'قلوب مفتوحة');
+        const revealed = openPool[Math.floor(Math.random() * openPool.length)];
+        showTreasurePop('🎁', `محطة كنز! ${revealed.text}`);
+      } else if (result.event) {
+        showTreasurePop(SURPRISE_ICON[result.event.kind], SURPRISE_TEXT[result.event.kind]);
+      }
+    };
+
+    if (popupDelayMs > 0) window.setTimeout(showPopup, popupDelayMs);
+    else showPopup();
+  }
+
   function renderTreasureBar(): void {
     const active = treasure.isEnabled();
     el.treasureBar.hidden = !active;
@@ -208,45 +236,98 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     el.treasureBarFill.style.width = `${pct}%`;
   }
 
+  // Hand-drawn winding route rather than a straight bar — a real map, per
+  // the user's explicit ask, with a path that curves like the reference
+  // artwork instead of a flat progress strip. Markers are positioned along
+  // this exact curve via CSS motion-path (offset-path/offset-distance),
+  // which places them by *arc length* percentage — matching the SVG
+  // <path> stroke-dasharray dots, so a marker at 40% sits on the 40%-along
+  // point of the drawn line, on curves too, not just straight segments.
+  //
+  // offset-path's path() coordinates are literal CSS pixels in the
+  // containing block, *not* scaled by an SVG viewBox — so .treasure-svg-wrap
+  // is fixed at exactly this coordinate space's size (260×370px) rather
+  // than left responsive, or the markers and the drawn line would drift
+  // apart on different screen widths.
+  const TREASURE_MAP_W = 260;
+  const TREASURE_MAP_H = 370;
+  const TREASURE_PATH_D =
+    'M 228 22 C 163 13, 103 34, 112 73 C 120 112, 189 103, 194 142 ' +
+    'C 198 181, 86 172, 69 215 C 52 258, 138 258, 146 297 ' +
+    'C 153 327, 95 331, 82 348';
+
   // The full map draws a small, fixed number of markers (stations + surprise
-  // tiles + the chest + the current position) positioned by percentage along
-  // one track, rather than one element per path step — a 200+ step path
-  // would otherwise mean 200+ DOM nodes wrapping across the screen.
+  // tiles + the chest + the current position) positioned along the curve by
+  // percentage, rather than one element per path step — a 200+ step path
+  // would otherwise mean 200+ DOM nodes.
   function renderTreasureMap(): void {
     const { currentStep, pathLength, stations, surprises, reachedTreasure } = treasure.getProgress();
     el.treasureMap.replaceChildren();
     if (pathLength === 0) return;
 
-    const track = document.createElement('div');
-    track.className = 'treasure-track';
+    const svgWrap = document.createElement('div');
+    svgWrap.className = 'treasure-svg-wrap';
+    svgWrap.innerHTML = `
+      <svg viewBox="0 0 ${TREASURE_MAP_W} ${TREASURE_MAP_H}" class="treasure-route-svg" aria-hidden="true">
+        <path d="${TREASURE_PATH_D}" class="treasure-route-line" />
+        <path d="${TREASURE_PATH_D}" class="treasure-route-fill" id="treasureRouteFill" />
+      </svg>
+    `;
+    el.treasureMap.appendChild(svgWrap);
 
-    const fill = document.createElement('div');
-    fill.className = 'treasure-track-fill';
-    fill.style.width = `${Math.min(100, (currentStep / pathLength) * 100)}%`;
-    track.appendChild(fill);
+    // stroke-dasharray/dashoffset need the path's real drawn length in SVG
+    // units (getTotalLength()), not a guessed round number, or the "filled"
+    // portion wouldn't actually line up with the percentage it's meant to
+    // represent.
+    const fillPath = svgWrap.querySelector<SVGPathElement>('#treasureRouteFill')!;
+    const totalLength = fillPath.getTotalLength();
+    const progressPct = Math.min(100, (currentStep / pathLength) * 100);
+    fillPath.style.strokeDasharray = `${totalLength}`;
+    fillPath.style.strokeDashoffset = `${totalLength * (1 - progressPct / 100)}`;
 
-    function addMarker(position: number, cls: string, icon: string, label: string): void {
-      const marker = document.createElement('div');
+    function addMarker(position: number, cls: string, src: string, label: string, size: number): void {
+      const marker = document.createElement('img');
+      marker.src = src;
       marker.className = `treasure-marker ${cls}`;
-      marker.style.insetInlineStart = `${Math.min(100, (position / pathLength) * 100)}%`;
-      marker.textContent = icon;
+      marker.style.width = `${size}px`;
+      marker.style.offsetPath = `path('${TREASURE_PATH_D}')`;
+      marker.style.offsetDistance = `${Math.min(100, (position / pathLength) * 100)}%`;
+      // Fixed upright orientation -- offset-path's default rotates the
+      // element to match the curve's tangent, which would tilt these icons
+      // as they follow the winding line.
+      marker.style.offsetRotate = '0deg';
       marker.setAttribute('aria-label', label);
-      track.appendChild(marker);
+      marker.setAttribute('alt', label);
+      svgWrap.appendChild(marker);
     }
 
-    for (const s of stations) addMarker(s.position, s.triggered ? 'treasure-marker-done' : '', '🎁', 'محطة');
+    stations.forEach((s, i) => {
+      addMarker(s.position, s.triggered ? 'treasure-marker-done' : '', TREASURE_IMAGES.stations[i], 'محطة', 34);
+    });
     for (const s of surprises) {
-      addMarker(s.position, s.triggered ? 'treasure-marker-done' : '', SURPRISE_ICON[s.kind], 'مفاجأة');
+      addMarker(
+        s.position,
+        s.triggered ? 'treasure-marker-done' : '',
+        TREASURE_IMAGES[s.kind],
+        'مفاجأة',
+        26,
+      );
     }
     addMarker(
       pathLength,
-      reachedTreasure ? 'treasure-marker-chest-open' : 'treasure-marker-chest',
-      reachedTreasure ? '🏆' : '🔒',
+      'treasure-marker-chest',
+      reachedTreasure ? TREASURE_IMAGES.chestOpen : TREASURE_IMAGES.chestClosed,
       'الكنز',
+      44,
     );
-    addMarker(Math.min(currentStep, pathLength), 'treasure-marker-current', '📍', 'موقعكم الآن');
+    addMarker(
+      Math.min(currentStep, pathLength),
+      'treasure-marker-current',
+      TREASURE_IMAGES.currentPosition,
+      'موقعكم الآن',
+      28,
+    );
 
-    el.treasureMap.appendChild(track);
     el.treasureMapStatus.textContent = reachedTreasure
       ? 'وصلتم للكنز معًا! 🎉'
       : `${Math.min(currentStep, pathLength)} من ${pathLength} خطوة — الكنز ما زال ينتظركم.`;
@@ -332,22 +413,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     // mid-session would silently invalidate whatever progress is (or isn't)
     // being tracked, so the choice made before the first draw is final.
     treasure.lock();
-    if (treasure.isEnabled()) {
-      const result = treasure.advance(next.cat);
-      renderTreasureBar();
-      // Reaching the treasure is the biggest news, so it wins if it happens
-      // on the same draw as a station or surprise tile (rare, but possible
-      // with a jump3 tile right before the end).
-      if (result.justReached) {
-        showTreasurePop('🏆', 'وصلتم للكنز معًا! 🎉');
-      } else if (result.station) {
-        const openPool = DECK.filter((c) => c.cat === 'قلوب مفتوحة');
-        const revealed = openPool[Math.floor(Math.random() * openPool.length)];
-        showTreasurePop('🎁', `محطة كنز! ${revealed.text}`);
-      } else if (result.event) {
-        showTreasurePop(SURPRISE_ICON[result.event.kind], SURPRISE_TEXT[result.event.kind]);
-      }
-    }
+    if (treasure.isEnabled()) handleTreasureResult(treasure.advanceOnDraw(next.cat));
   }
 
   function goToHistory(index: number): void {
@@ -395,6 +461,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     renderTurnBar();
     showCelebrationPop(`أحسنت يا ${getPlayers()[index].name}! ❤️`);
     playHeart();
+    if (treasure.isEnabled()) handleTreasureResult(treasure.advanceOnPoint(), 1300);
   });
 
   function closeLengthMenu(): void {

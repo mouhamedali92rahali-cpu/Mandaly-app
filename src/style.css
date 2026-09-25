@@ -1067,37 +1067,51 @@ body {
 .treasure-map {
   width: 100%;
   margin: 10px 0;
+  display: flex;
+  justify-content: center;
 }
-.treasure-track {
+/* Fixed pixel size, not responsive — offset-path's path() coordinates
+   (used on .treasure-marker below) are literal CSS pixels in this
+   container, not scaled by the SVG's viewBox, so the markers and the
+   drawn line only line up if this box stays exactly the coordinate
+   space's size (see TREASURE_MAP_W/H in game.ts). */
+.treasure-svg-wrap {
   position: relative;
-  height: 10px;
-  border-radius: 6px;
-  background: rgba(227, 200, 118, 0.15);
-  margin: 46px 12px 34px;
+  width: 260px;
+  height: 370px;
+  max-width: 100%;
 }
-.treasure-track-fill {
-  height: 100%;
-  border-radius: 6px;
-  background: var(--gold);
+.treasure-route-svg {
+  width: 260px;
+  height: 370px;
+  display: block;
+}
+.treasure-route-line {
+  fill: none;
+  stroke: rgba(201, 162, 75, 0.3);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1 9;
+}
+.treasure-route-fill {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1 9;
+  transition: stroke-dashoffset 0.5s ease;
 }
 .treasure-marker {
   position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 19px;
-  line-height: 1;
+  top: 0;
+  left: 0;
+  offset-anchor: 50% 50%;
 }
 .treasure-marker-done {
   opacity: 0.4;
 }
 .treasure-marker-current {
-  top: -24px;
-  font-size: 22px;
-  filter: drop-shadow(0 0 4px rgba(201, 162, 75, 0.6));
-}
-.treasure-marker-chest,
-.treasure-marker-chest-open {
-  font-size: 26px;
+  filter: drop-shadow(0 0 5px rgba(201, 162, 75, 0.8));
 }
 
 @keyframes popfade {
