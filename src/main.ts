@@ -135,9 +135,20 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <img class="intro-logo" src="${logoMark}" alt="Mandaly" />
       <h2 class="intro-title">جلسة تستحق أن تُروى ✨</h2>
       <p class="intro-text" id="farewellSubtext">شكرًا لأنكم قضيتم هذا الوقت معًا. إليكم نتائج هذه الجولة:</p>
+      <p class="intro-text intro-text-emphasis" id="farewellTreasureText" hidden></p>
       <div class="standings-list" id="standingsList"></div>
       <button class="btn btn-primary" id="farewellRestartBtn">🔁 جولة جديدة</button>
       <button class="btn btn-heart" id="farewellEndBtn">إنهاء الجلسة</button>
+    </div>
+  </div>
+
+  <div class="intro-overlay" id="treasureMapOverlay" hidden>
+    <div class="intro-page active" id="treasureMapPage">
+      ${cardCorners}
+      <h2 class="intro-title">🗺️ رحلة الكنز</h2>
+      <div class="treasure-map" id="treasureMap"></div>
+      <p class="intro-text" id="treasureMapStatus"></p>
+      <button class="btn btn-primary" id="treasureMapCloseBtn">إغلاق</button>
     </div>
   </div>
 
@@ -179,10 +190,20 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <span class="filter-item-icon">🤍</span>
           <span>قلوب مفتوحة فقط</span>
         </button>
+        <button class="filter-menu-item" id="treasureToggleItem" role="menuitemcheckbox" aria-checked="false">
+          <span class="filter-item-icon">🗺️</span>
+          <span>رحلة الكنز</span>
+        </button>
       </div>
     </div>
 
     <div class="wordmark">MANDALY</div>
+
+    <button class="treasure-bar" id="treasureBar" hidden aria-label="افتح خريطة رحلة الكنز">
+      <span class="treasure-bar-icon">🗺️</span>
+      <span class="treasure-bar-track"><span class="treasure-bar-fill" id="treasureBarFill"></span></span>
+      <span class="treasure-bar-icon">🔒</span>
+    </button>
 
     <div class="turn-bar" id="turnBar" hidden>
       <div class="turn-players" id="turnPlayers"></div>
@@ -243,6 +264,13 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <div class="heart-pop-text" id="heartPopText">نحبكم برشا</div>
       </div>
     </div>
+
+    <div class="heart-pop" id="treasurePop">
+      <div class="heart-pop-inner">
+        <div class="heart-pop-icon" id="treasurePopIcon">🎁</div>
+        <div class="heart-pop-text" id="treasurePopText"></div>
+      </div>
+    </div>
   </div>
 `;
 
@@ -279,6 +307,16 @@ function initEverything(): void {
       lengthToggle: document.getElementById('lengthToggle') as HTMLButtonElement,
       lengthMenu: document.getElementById('lengthMenu')!,
       calmOnlyItem: document.getElementById('calmOnlyItem') as HTMLButtonElement,
+      treasureToggleItem: document.getElementById('treasureToggleItem') as HTMLButtonElement,
+      treasureBar: document.getElementById('treasureBar') as HTMLButtonElement,
+      treasureBarFill: document.getElementById('treasureBarFill')!,
+      treasureMapOverlay: document.getElementById('treasureMapOverlay')!,
+      treasureMap: document.getElementById('treasureMap')!,
+      treasureMapStatus: document.getElementById('treasureMapStatus')!,
+      treasureMapCloseBtn: document.getElementById('treasureMapCloseBtn') as HTMLButtonElement,
+      treasurePop: document.getElementById('treasurePop')!,
+      treasurePopIcon: document.getElementById('treasurePopIcon')!,
+      treasurePopText: document.getElementById('treasurePopText')!,
       statDrawn: document.getElementById('statDrawn')!,
       statHearts: document.getElementById('statHearts')!,
       heartPop: document.getElementById('heartPop')!,
@@ -319,6 +357,7 @@ function initEverything(): void {
       overlay: document.getElementById('farewellOverlay')!,
       subtext: document.getElementById('farewellSubtext')!,
       standingsList: document.getElementById('standingsList')!,
+      treasureText: document.getElementById('farewellTreasureText')!,
       restartBtn: document.getElementById('farewellRestartBtn') as HTMLButtonElement,
       endBtn: document.getElementById('farewellEndBtn') as HTMLButtonElement,
     },

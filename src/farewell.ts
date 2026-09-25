@@ -1,10 +1,12 @@
 import { getPlayers, getStandings, restartSession, endSession } from './players';
 import { playFarewellFanfare } from './sound';
+import { isEnabled as treasureEnabled, getProgress as getTreasureProgress } from './treasure';
 
 export interface FarewellElements {
   overlay: HTMLElement;
   subtext: HTMLElement;
   standingsList: HTMLElement;
+  treasureText: HTMLElement;
   restartBtn: HTMLButtonElement;
   endBtn: HTMLButtonElement;
 }
@@ -57,6 +59,16 @@ export function initFarewell(el: FarewellElements, onRestart: () => void, onEnd:
     el.standingsList.hidden = !withPlayers;
     el.restartBtn.textContent = withPlayers ? WITH_PLAYERS_RESTART_LABEL : CLASSIC_RESTART_LABEL;
     if (withPlayers) renderStandings();
+
+    // رحلة الكنز is independent of the players/classic split above, so this
+    // just adds its own line rather than replacing either message.
+    el.treasureText.hidden = !treasureEnabled();
+    if (treasureEnabled()) {
+      const { reachedTreasure } = getTreasureProgress();
+      el.treasureText.textContent = reachedTreasure
+        ? '🏆 وصلتم للكنز معًا هذه المرة!'
+        : '🗺️ الكنز ما زال ينتظركم في المرة القادمة...';
+    }
 
     el.overlay.hidden = false;
     void el.overlay.offsetWidth;

@@ -4,6 +4,7 @@ import { buildSessionDeck, orderSessionCards, type GameLength } from './data/ses
 import { playFlip, playHeart, playFamilyHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { hasSession, advanceTurn, awardPointTo, getPlayers, getCurrentIndex } from './players';
+import * as treasure from './treasure';
 import type { Timer } from './timer';
 
 export type { GameLength };
@@ -24,6 +25,16 @@ interface Elements {
   lengthToggle: HTMLButtonElement;
   lengthMenu: HTMLElement;
   calmOnlyItem: HTMLButtonElement;
+  treasureToggleItem: HTMLButtonElement;
+  treasureBar: HTMLButtonElement;
+  treasureBarFill: HTMLElement;
+  treasureMapOverlay: HTMLElement;
+  treasureMap: HTMLElement;
+  treasureMapStatus: HTMLElement;
+  treasureMapCloseBtn: HTMLButtonElement;
+  treasurePop: HTMLElement;
+  treasurePopIcon: HTMLElement;
+  treasurePopText: HTMLElement;
   turnBar: HTMLElement;
   turnPlayers: HTMLElement;
   endSessionBtn: HTMLButtonElement;
@@ -169,7 +180,80 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     });
   }
 
+  const SURPRISE_ICON: Record<treasure.SurpriseKind, string> = {
+    back2: '⬅️',
+    jump3: '➡️',
+    doubleNext: '✨',
+  };
+  const SURPRISE_TEXT: Record<treasure.SurpriseKind, string> = {
+    back2: 'مفاجأة! تراجعتم خطوتين على مسار الكنز.',
+    jump3: 'مفاجأة! قفزتم 3 خطوات إضافية على مسار الكنز.',
+    doubleNext: 'مفاجأة! الخطوة القادمة على مسار الكنز مضاعفة.',
+  };
+
+  function showTreasurePop(icon: string, text: string): void {
+    el.treasurePopIcon.textContent = icon;
+    el.treasurePopText.textContent = text;
+    el.treasurePop.classList.remove('show');
+    void el.treasurePop.offsetWidth;
+    el.treasurePop.classList.add('show');
+  }
+
+  function renderTreasureBar(): void {
+    const active = treasure.isEnabled();
+    el.treasureBar.hidden = !active;
+    if (!active) return;
+    const { currentStep, pathLength } = treasure.getProgress();
+    const pct = pathLength > 0 ? Math.min(100, (currentStep / pathLength) * 100) : 0;
+    el.treasureBarFill.style.width = `${pct}%`;
+  }
+
+  // The full map draws a small, fixed number of markers (stations + surprise
+  // tiles + the chest + the current position) positioned by percentage along
+  // one track, rather than one element per path step — a 200+ step path
+  // would otherwise mean 200+ DOM nodes wrapping across the screen.
+  function renderTreasureMap(): void {
+    const { currentStep, pathLength, stations, surprises, reachedTreasure } = treasure.getProgress();
+    el.treasureMap.replaceChildren();
+    if (pathLength === 0) return;
+
+    const track = document.createElement('div');
+    track.className = 'treasure-track';
+
+    const fill = document.createElement('div');
+    fill.className = 'treasure-track-fill';
+    fill.style.width = `${Math.min(100, (currentStep / pathLength) * 100)}%`;
+    track.appendChild(fill);
+
+    function addMarker(position: number, cls: string, icon: string, label: string): void {
+      const marker = document.createElement('div');
+      marker.className = `treasure-marker ${cls}`;
+      marker.style.insetInlineStart = `${Math.min(100, (position / pathLength) * 100)}%`;
+      marker.textContent = icon;
+      marker.setAttribute('aria-label', label);
+      track.appendChild(marker);
+    }
+
+    for (const s of stations) addMarker(s.position, s.triggered ? 'treasure-marker-done' : '', '🎁', 'محطة');
+    for (const s of surprises) {
+      addMarker(s.position, s.triggered ? 'treasure-marker-done' : '', SURPRISE_ICON[s.kind], 'مفاجأة');
+    }
+    addMarker(
+      pathLength,
+      reachedTreasure ? 'treasure-marker-chest-open' : 'treasure-marker-chest',
+      reachedTreasure ? '🏆' : '🔒',
+      'الكنز',
+    );
+    addMarker(Math.min(currentStep, pathLength), 'treasure-marker-current', '📍', 'موقعكم الآن');
+
+    el.treasureMap.appendChild(track);
+    el.treasureMapStatus.textContent = reachedTreasure
+      ? 'وصلتم للكنز معًا! 🎉'
+      : `${Math.min(currentStep, pathLength)} من ${pathLength} خطوة — الكنز ما زال ينتظركم.`;
+  }
+
   function buildDeck(): Card[] {
+    treasure.configureForLength(gameLength);
     if (calmOnly) return orderSessionCards(DECK.filter((c) => c.cat === 'قلوب مفتوحة'));
     const excludeNeeds3 = getPlayers().length < 3;
     return buildSessionDeck(DECK, gameLength, excludeNeeds3);
@@ -242,6 +326,28 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     drawn++;
     el.statDrawn.textContent = String(drawn);
     updateNavButtons();
+
+    // Locks the toggle regardless of whether رحلة الكنز is even on this
+    // session — once a real card has been drawn, switching it on or off
+    // mid-session would silently invalidate whatever progress is (or isn't)
+    // being tracked, so the choice made before the first draw is final.
+    treasure.lock();
+    if (treasure.isEnabled()) {
+      const result = treasure.advance(next.cat);
+      renderTreasureBar();
+      // Reaching the treasure is the biggest news, so it wins if it happens
+      // on the same draw as a station or surprise tile (rare, but possible
+      // with a jump3 tile right before the end).
+      if (result.justReached) {
+        showTreasurePop('🏆', 'وصلتم للكنز معًا! 🎉');
+      } else if (result.station) {
+        const openPool = DECK.filter((c) => c.cat === 'قلوب مفتوحة');
+        const revealed = openPool[Math.floor(Math.random() * openPool.length)];
+        showTreasurePop('🎁', `محطة كنز! ${revealed.text}`);
+      } else if (result.event) {
+        showTreasurePop(SURPRISE_ICON[result.event.kind], SURPRISE_TEXT[result.event.kind]);
+      }
+    }
   }
 
   function goToHistory(index: number): void {
@@ -315,10 +421,12 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     }
     el.calmOnlyItem.classList.toggle('active', calmOnly);
     el.calmOnlyItem.setAttribute('aria-checked', String(calmOnly));
+    el.treasureToggleItem.classList.toggle('active', treasure.isEnabled());
+    el.treasureToggleItem.setAttribute('aria-checked', String(treasure.isEnabled()));
     // A dot on the "⋮" button is the only always-visible cue once a
     // non-default choice is active, since the menu itself stays closed
     // the rest of the time.
-    el.lengthToggle.classList.toggle('has-filter', calmOnly || gameLength !== 'short');
+    el.lengthToggle.classList.toggle('has-filter', calmOnly || treasure.isEnabled() || gameLength !== 'short');
   }
 
   el.lengthMenu.addEventListener('click', (e) => {
@@ -326,7 +434,18 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     if (!item) return;
 
     if (item === el.calmOnlyItem) {
+      // قلوب مفتوحة فقط and رحلة الكنز are mutually exclusive (every card
+      // would give the same fixed step count, defeating the ~two-thirds
+      // odds the path length is tuned for) — but once treasure is locked
+      // in for the session, there's no way to turn it off to make room, so
+      // the toggle is refused rather than silently breaking that exclusion.
+      if (treasure.isEnabled() && treasure.isLocked()) return;
       calmOnly = !calmOnly;
+      if (calmOnly) treasure.setEnabled(false);
+    } else if (item === el.treasureToggleItem) {
+      if (treasure.isLocked()) return;
+      treasure.setEnabled(!treasure.isEnabled());
+      if (treasure.isEnabled()) calmOnly = false;
     } else if (item.dataset.length) {
       gameLength = item.dataset.length as GameLength;
     } else {
@@ -337,7 +456,16 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     // Only affects the pool future draws come from — the card on screen and
     // history stay put until the next draw.
     deck = buildDeck();
+    renderTreasureBar();
     closeLengthMenu();
+  });
+
+  el.treasureBar.addEventListener('click', () => {
+    renderTreasureMap();
+    el.treasureMapOverlay.hidden = false;
+  });
+  el.treasureMapCloseBtn.addEventListener('click', () => {
+    el.treasureMapOverlay.hidden = true;
   });
 
   document.addEventListener('click', (e) => {
@@ -351,6 +479,7 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
   el.endSessionBtn.addEventListener('click', onEndSession);
 
   renderTurnBar();
+  renderTreasureBar();
 
   return {
     notifySessionChanged(): void {
@@ -372,6 +501,9 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
       // exist — the needs3 pool check only sees the real registered count
       // from here on, once a session actually starts or restarts.
       deck = buildDeck();
+      // buildDeck() already reconfigures the path layout for the current
+      // length — this just refreshes the strip to reflect the reset.
+      renderTreasureBar();
     },
   };
 }
