@@ -1,7 +1,7 @@
 import { DECK, type Card } from './data/deck';
 import { CATEGORY_ICONS } from './data/categories';
 import { buildSessionDeck, orderSessionCards, type GameLength } from './data/session';
-import { playFlip, playHeart, playFamilyHeart, speakCelebration } from './sound';
+import { playFlip, playHeart, playFamilyHeart } from './sound';
 import { hapticDraw, hapticHeart } from './haptics';
 import { hasSession, advanceTurn, awardPointTo, getPlayers, getCurrentIndex } from './players';
 import * as treasure from './treasure';
@@ -466,7 +466,6 @@ export function initGame(el: Elements, timer: Timer, onEndSession: () => void): 
     renderTurnBar();
     showCelebrationPop(`أحسنت يا ${name}! ❤️`);
     playHeart();
-    speakCelebration(`أحسنت يا ${name}!`);
     if (treasure.isEnabled()) handleTreasureResult(treasure.advanceOnPoint(), 1300);
   });
 

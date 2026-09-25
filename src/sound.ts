@@ -9,20 +9,14 @@ import bgMusicUrl from './assets/bg-music.mp3';
 
 const SFX_MUTED_KEY = 'mandaly-muted';
 const MUSIC_ENABLED_KEY = 'mandaly-music-enabled';
-const SPEECH_ENABLED_KEY = 'mandaly-speech-enabled';
 
 let ctx: AudioContext | null = null;
-// Short effects (flip, heart, timer), the continuous background music, and
-// spoken name announcements are all muted independently — each caller below
-// checks only the flag it cares about, so turning one off never touches
-// the others.
+// Short effects (flip, heart, timer) and the continuous background music
+// are muted independently — each caller below checks only the flag it
+// cares about, so turning one off never touches the other.
 let sfxMuted = getSavedFlag(SFX_MUTED_KEY, false);
 // Off by default: music only starts if the player explicitly turns it on.
 let musicEnabled = getSavedFlag(MUSIC_ENABLED_KEY, false);
-// Off by default and experimental — device Arabic TTS quality varies a lot
-// (see speakCelebration()'s comment), so this is opt-in rather than assumed
-// to sound good everywhere the way the hand-tuned tones do.
-let speechEnabled = getSavedFlag(SPEECH_ENABLED_KEY, false);
 
 let flipBuffer: AudioBuffer | null = null;
 let flipBufferPromise: Promise<AudioBuffer> | null = null;
@@ -342,55 +336,3 @@ export function resumeMusicIfEnabled(): void {
   if (musicEnabled) setMusicEnabled(true);
 }
 
-export function isSpeechEnabled(): boolean {
-  return speechEnabled;
-}
-
-export function setSpeechEnabled(next: boolean): void {
-  speechEnabled = next;
-  setSavedFlag(SPEECH_ENABLED_KEY, speechEnabled);
-}
-
-// speechSynthesis.getVoices() returns an empty list on first call on some
-// browsers (notably Chrome) until the voice catalog finishes loading
-// asynchronously — cached here once found so every later speakCelebration()
-// call doesn't re-run the lookup.
-let arabicVoice: SpeechSynthesisVoice | null = null;
-
-function findArabicVoice(): SpeechSynthesisVoice | null {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
-  return window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('ar')) ?? null;
-}
-
-if (typeof window !== 'undefined' && window.speechSynthesis) {
-  arabicVoice = findArabicVoice();
-  if (!arabicVoice) {
-    window.speechSynthesis.addEventListener(
-      'voiceschanged',
-      () => {
-        arabicVoice = findArabicVoice();
-      },
-      { once: true },
-    );
-  }
-}
-
-/**
- * Experimental: speaks `text` aloud (e.g. "أحسنت يا أحمد!") using the
- * device's own Arabic text-to-speech voice, gated by its own independent
- * toggle (off by default). Device Arabic TTS quality/availability varies a
- * lot — some phones have no Arabic voice installed at all, and even where
- * one exists it can sound noticeably more robotic than this app's
- * hand-tuned tones — so this silently does nothing rather than falling
- * back to a non-Arabic voice that would mispronounce Arabic text badly.
- */
-export function speakCelebration(text: string): void {
-  if (!speechEnabled) return;
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  if (!arabicVoice) return;
-  window.speechSynthesis.cancel(); // don't queue behind a still-speaking previous line
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.voice = arabicVoice;
-  utterance.lang = arabicVoice.lang;
-  window.speechSynthesis.speak(utterance);
-}

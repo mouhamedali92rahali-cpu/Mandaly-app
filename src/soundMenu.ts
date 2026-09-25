@@ -1,11 +1,10 @@
-import { isMuted, setMuted, isMusicEnabled, setMusicEnabled, isSpeechEnabled, setSpeechEnabled } from './sound';
+import { isMuted, setMuted, isMusicEnabled, setMusicEnabled } from './sound';
 
 export interface SoundMenuElements {
   toggle: HTMLButtonElement;
   menu: HTMLElement;
   sfxItem: HTMLButtonElement;
   musicItem: HTMLButtonElement;
-  speechItem: HTMLButtonElement;
 }
 
 // A dropdown (same pattern as the "⋮" filter menu) with two independent
@@ -16,17 +15,14 @@ export function initSoundMenu(el: SoundMenuElements): void {
   function render(): void {
     const sfxOn = !isMuted();
     const musicOn = isMusicEnabled();
-    const speechOn = isSpeechEnabled();
 
     el.toggle.textContent = sfxOn ? '🔊' : '🔇';
-    el.toggle.classList.toggle('has-music', musicOn || speechOn);
+    el.toggle.classList.toggle('has-music', musicOn);
 
     el.sfxItem.classList.toggle('active', sfxOn);
     el.sfxItem.setAttribute('aria-checked', String(sfxOn));
     el.musicItem.classList.toggle('active', musicOn);
     el.musicItem.setAttribute('aria-checked', String(musicOn));
-    el.speechItem.classList.toggle('active', speechOn);
-    el.speechItem.setAttribute('aria-checked', String(speechOn));
   }
 
   function closeMenu(): void {
@@ -54,11 +50,6 @@ export function initSoundMenu(el: SoundMenuElements): void {
 
   el.musicItem.addEventListener('click', () => {
     setMusicEnabled(!isMusicEnabled());
-    render();
-  });
-
-  el.speechItem.addEventListener('click', () => {
-    setSpeechEnabled(!isSpeechEnabled());
     render();
   });
 
