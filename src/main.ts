@@ -190,6 +190,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
             <span class="filter-item-icon">🎵</span>
             <span>الموسيقى الخلفية</span>
           </button>
+          <button class="filter-menu-item" id="speechToggleItem" role="menuitemcheckbox" aria-checked="false">
+            <span class="filter-item-icon">🗣️</span>
+            <span>نطق الأسماء (تجريبي)</span>
+          </button>
         </div>
       </div>
       <button class="icon-btn" id="helpBtn" aria-label="كيف نلعب؟">؟</button>
@@ -359,6 +363,7 @@ function initEverything(): void {
     menu: document.getElementById('soundMenu')!,
     sfxItem: document.getElementById('sfxToggleItem') as HTMLButtonElement,
     musicItem: document.getElementById('musicToggleItem') as HTMLButtonElement,
+    speechItem: document.getElementById('speechToggleItem') as HTMLButtonElement,
   });
 
   // Ending the session (from the farewell page) is meant to feel final, not
