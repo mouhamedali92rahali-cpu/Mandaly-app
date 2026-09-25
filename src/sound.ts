@@ -45,7 +45,15 @@ function setSavedFlag(key: string, value: boolean): void {
 // being gated by either one's mute flag.
 function getContext(): AudioContext | null {
   try {
-    ctx ??= new AudioContext();
+    // 'playback' asks the browser for a larger internal audio buffer than
+    // the ('interactive') default, which is tuned for the lowest possible
+    // latency at the cost of being more prone to underrun glitches (an
+    // audible crackle/click) the moment the main thread is briefly busy —
+    // easy to hit here since a continuous looping music bed keeps the audio
+    // thread running the whole session, unlike the short one-off SFX this
+    // was originally tuned for. This app has no reason to need low-latency
+    // response (no rhythm-game-style timing), so the tradeoff costs nothing.
+    ctx ??= new AudioContext({ latencyHint: 'playback' });
     // Never auto-resume while the tab/app is backgrounded — otherwise a
     // background timer tick could silently undo the pause below for the
     // rest of the time it stays hidden.
