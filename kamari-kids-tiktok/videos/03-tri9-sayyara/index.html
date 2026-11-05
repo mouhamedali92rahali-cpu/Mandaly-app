@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>03 — طريق السيارة (تراكب نصوص فوق لقطات الهاتف)</title>
+<link rel="stylesheet" href="../../brand/brand.css">
+<style>
+  /* هذا الفيديو يُبنى من لقطات حقيقية. الصفحة ترسم النصوص فقط بخلفية شفافة.
+     مع ?animatic=1 تظهر أماكن اللقطات كمربعات رمادية موسومة — للتوقيت فقط، وليست تصويرًا للنشاط. */
+  .tag { position: absolute; left: 80px; right: 160px; text-align: center; }
+  .tag span { display: inline-block; background: rgba(255,249,241,.94); color: var(--plum); border-radius: 36px;
+              padding: 14px 34px 18px; font-family: var(--f-head); font-weight: 800; font-size: 66px; line-height: 1.25;
+              box-shadow: 0 8px 0 rgba(58,31,93,.18); }
+  .tag.small span { font-family: var(--f-body); font-weight: 700; font-size: 46px; padding: 10px 28px 14px; }
+  .chip { position: absolute; padding: 10px 28px 14px; border-radius: 30px; font-family: var(--f-body); font-weight: 700;
+          font-size: 44px; color: var(--plum); border: 5px solid var(--plum); background: #fff; }
+  #brandbar { left: 0; right: 130px; top: 1290px; text-align: center; }
+  #brandbar .pill { display: inline-flex; align-items: center; gap: 18px; background: rgba(255,249,241,.95); border-radius: 50px;
+                    padding: 12px 34px; box-shadow: 0 8px 0 rgba(58,31,93,.18); }
+  #brandbar .m { width: 74px; height: 74px; }
+  #brandbar .l { font-family: var(--f-latin); font-weight: 700; font-size: 54px; direction: ltr; color: var(--plum); }
+  #brandbar .l b { color: var(--mint-deep); font-weight: 600; }
+  #brandbar .a { font-family: var(--f-head); font-weight: 800; font-size: 50px; color: var(--plum-2); }
+
+  #animatic { position: absolute; inset: 0; display: none; background: #4A4458; }
+  body.animatic #animatic { display: block; }
+  .ph { position: absolute; inset: 40px; border: 8px dashed rgba(255,255,255,.45); border-radius: 40px; display: none;
+        color: rgba(255,255,255,.88); font-family: var(--f-body); text-align: center; }
+  .ph .n { margin-top: 640px; font-weight: 700; font-size: 64px; }
+  .ph .d { margin: 24px 90px 0; font-weight: 400; font-size: 42px; line-height: 1.5; }
+  .ph .w { position: absolute; bottom: 260px; left: 0; right: 0; font-size: 36px; color: var(--sun); font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="animatic"></div>
+
+  <div class="tag" id="t1" style="top:210px"><span>طريق صغير…<br>ومغامرة فوق الطاولة!</span></div>
+  <div class="tag" id="t2" style="top:210px"><span>نحضّرو طريق قصير<br>ونوريهولو مرة</span></div>
+  <div class="tag" id="t3" style="top:210px"><span>نمشيو بشوية…<br>وين باش توصل السيارة؟</span></div>
+  <div class="tag" id="t4" style="top:210px"><span>ننقصو ولا نزيدو دورة<br>حسب راحتو</span></div>
+  <div class="chip" id="c4a" style="left:0;top:0">أسهل: طريق مستقيم</div>
+  <div class="chip" id="c4b" style="left:0;top:0">أصعب: نزيدو دورة</div>
+  <div class="tag" id="t5" style="top:210px"><span>احفظ الفكرة<br>لوقت اللعب</span></div>
+  <div class="abs" id="brandbar"><div class="pill"><div class="m" id="bm"></div><div class="l">KAMARI <b>kids</b></div><div class="a">قمري كيدز</div></div></div>
+</div>
+<script src="../../engine/lib.js"></script>
+<script src="../../brand/icons.js"></script>
+<script>
+  // تقسيم اللقطات (بالثواني) — يطابق قائمة اللقطات shot-list.md و compose.sh
+  const SHOTS = [
+    { id: 'shot1', a: 0, b: 3, n: 'لقطة 1 — 3ث', d: 'سيارة لعبة أمام طريق ورقي عريض، تصوير من فوق' },
+    { id: 'shot2', a: 3, b: 8, n: 'لقطة 2 — 5ث', d: 'يدا الكبير ترتّبان ورقتين وترسمان الطريق بقلم عريض' },
+    { id: 'shot3', a: 8, b: 16, n: 'لقطة 3 — 8ث', d: 'إصبع يتتبع الطريق ببطء، ثم السيارة تمشي على نفس الطريق' },
+    { id: 'shot4a', a: 16, b: 18.5, n: 'لقطة 4أ — 2.5ث', d: 'نسخة أسهل: طريق مستقيم' },
+    { id: 'shot4b', a: 18.5, b: 21, n: 'لقطة 4ب — 2.5ث', d: 'نسخة أصعب: نفس الطريق مع منعطف' },
+    { id: 'shot5', a: 21, b: 25, n: 'لقطة 5 — 4ث', d: 'السيارة توصل لبيت مرسوم في آخر الطريق' },
+  ];
+  window.SHOTS = SHOTS;
+  const animatic = K.params.get('animatic') === '1';
+  if (animatic) document.body.classList.add('animatic');
+  const A = K.$('#animatic');
+  SHOTS.forEach(s => {
+    const d = document.createElement('div'); d.className = 'ph'; d.id = 'ph-' + s.id;
+    d.innerHTML = `<div class="n">${s.n}</div><div class="d">${s.d}</div><div class="w">مكان لقطة تُصوَّر بالهاتف — ليست تصويرًا فعليًا</div>`;
+    A.appendChild(d);
+  });
+  K.$('#bm').innerHTML = ICONS.moon;
+
+  window.VIDEO = {
+    duration: 25, fps: 30,
+    keepBaseAudio: 0.35, // صوت اللقطات الحقيقي (ورق، عجلات) يبقى خافتًا تحت التعليق
+    keyframes: [1.5, 5.5, 12, 17.2, 19.7, 23.5],
+    guideTimes: [5.5, 17.2, 23.5],
+    sfx: [
+      { t: .2, type: 'blip' }, { t: 3.1, type: 'blip', gain: .6 }, { t: 8.1, type: 'blip', gain: .6 },
+      { t: 16.1, type: 'blip', gain: .6 }, { t: 18.6, type: 'blip', gain: .6 },
+      { t: 21.6, type: 'chime', gain: .6 },
+    ],
+  };
+
+  window.renderFrame = function (t) {
+    SHOTS.forEach(s => { K.$('#ph-' + s.id).style.display = (t >= s.a && t < s.b) ? 'block' : 'none'; });
+    const tag = (sel, a, b) => K.set(sel, { o: K.win(t, a, b, .3, .25), y: K.lerp(-24, 0, K.E.outCubic(K.prog(t, a, a + .35))) });
+    tag('#t1', .15, 3.0); tag('#t2', 3.1, 8.0); tag('#t3', 8.2, 16.0); tag('#t4', 16.1, 21.0); tag('#t5', 21.3, 25.2);
+    // تسميات النسختين قرب أسفل المنطقة الآمنة
+    K.set('#c4a', { x: 540 - 230, y: 1300, o: K.win(t, 16.3, 18.5, .25, .2), s: K.E.outBack(K.prog(t, 16.3, 16.65)) });
+    K.set('#c4b', { x: 540 - 230, y: 1300, o: K.win(t, 18.6, 21.0, .25, .2), s: K.E.outBack(K.prog(t, 18.6, 18.95)) });
+    K.set('#brandbar', { o: K.prog(t, 22.0, 22.5), y: K.lerp(30, 0, K.E.outCubic(K.prog(t, 22.0, 22.6))) });
+  };
+  window.renderFrame(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>02 — لعبة ملاحظة: حاجة اختفت</title>
+<link rel="stylesheet" href="../../brand/brand.css">
+<style>
+  #shelf { left: 70px; width: 880px; top: 1180px; height: 46px; border-radius: 24px; background: var(--plum-2);
+           box-shadow: 0 12px 0 rgba(58,31,93,.18); }
+  .obj { left: 0; top: 0; width: 250px; height: 250px; }
+  .obj svg { width: 100%; height: 100%; }
+  .name { left: 0; top: 0; width: 250px; text-align: center; font-family: var(--f-head); font-weight: 800; font-size: 60px; }
+  /* الستارة: نصفان يلتقيان في الوسط */
+  .curtain { top: 560px; height: 760px; width: 480px; background: var(--mint);
+             border: 7px solid var(--plum); }
+  .curtain::after { content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg, transparent 0 58px, rgba(35,151,124,.35) 58px 70px); }
+  #cur-r { right: 70px; border-radius: 0 0 0 60px; transform-origin: right top; }
+  #cur-l { left: 70px; border-radius: 0 0 60px 0; transform-origin: left top; }
+  #rod { left: 50px; right: 50px; top: 536px; height: 34px; border-radius: 20px; background: var(--plum); }
+  #pauseRow { left: 0; right: 130px; top: 1330px; display: flex; justify-content: center; align-items: center; gap: 22px; }
+  #pauseRow .ic { width: 84px; height: 84px; }
+  #pauseRow span { font-family: var(--f-body); font-weight: 700; font-size: 50px; color: var(--plum-2); }
+  .dot { width: 26px; height: 26px; border-radius: 50%; background: var(--sun); }
+  #dots { left: 0; right: 130px; top: 1450px; display: flex; justify-content: center; gap: 22px; }
+  #halo { left: 0; top: 0; width: 420px; height: 420px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,200,61,.75) 0, rgba(255,200,61,0) 70%); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="headline" id="h1" style="top:200px">شوفو <span class="hl">مع بعضكم</span>…<br>شنوة موجود؟</div>
+  <div class="headline" id="h2" style="top:200px">حاجة <span class="hl">اختفت</span>…<br>شنية هي؟</div>
+  <div class="headline" id="h3" style="top:200px"><span class="hl">الكورة!</span></div>
+  <div class="sub" id="s3" style="top:340px">توا جرّبوها بثلاثة حوايج في الدار</div>
+
+  <div class="abs" id="halo"></div>
+  <div class="abs" id="shelf"></div>
+  <div class="abs obj" id="o-ball"></div>
+  <div class="abs obj" id="o-shoe"></div>
+  <div class="abs obj" id="o-book"></div>
+  <div class="abs name" id="n-ball">كورة</div>
+  <div class="abs name" id="n-shoe">صبّاط</div>
+  <div class="abs name" id="n-book">كتاب</div>
+
+  <div class="abs curtain" id="cur-r"></div>
+  <div class="abs curtain" id="cur-l"></div>
+  <div class="abs" id="rod"></div>
+
+  <div class="abs" id="pauseRow"><div class="ic" id="pauseIc"></div><span>تنجمو توقفو الفيديو</span></div>
+  <div class="abs" id="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+</div>
+<script src="../../engine/lib.js"></script>
+<script src="../../brand/icons.js"></script>
+<script src="../../brand/common.js"></script>
+<script>
+  const stage = K.$('#stage');
+  K.background(stage);
+  K.endcard(stage, { line1: 'العبوها مع بعضكم', line2: 'واحفظوا الفكرة لوقت اللعب' });
+  K.$('#o-ball').innerHTML = ICONS.ball;
+  K.$('#o-shoe').innerHTML = ICONS.shoe;
+  K.$('#o-book').innerHTML = ICONS.book;
+  K.$('#pauseIc').innerHTML = ICONS.pause;
+
+  // المواضع (مراكز): من اليمين لليسار، فوق الرف. أبقيناها بعيدًا عن أزرار تيك توك على اليمين.
+  const POS = { ball: [770, 1045], shoe: [510, 1045], book: [250, 1045] };
+  const KEYS = Object.keys(POS);
+
+  // الإيقاع: 0–7 نلاحظ (مع التسميات) • 7–9 ستارة • 9–14 السؤال + مهلة • 14–18 الكشف • 18–20 النهاية
+  const C = { close0: 7.0, close1: 7.6, open0: 8.3, open1: 8.9, reveal: 14.0, end: 18.0 };
+
+  window.VIDEO = {
+    duration: 20, fps: 30,
+    keyframes: [1.5, 5.0, 7.7, 10.5, 12.5, 15.0, 19.0],
+    guideTimes: [5.0, 12.5, 15.0],
+    sfx: [
+      { t: .15, type: 'blip' }, { t: .55, type: 'pop', gain: .5 }, { t: .75, type: 'pop', gain: .5 }, { t: .95, type: 'pop', gain: .5 },
+      { t: 3.2, type: 'blip', gain: .7 }, { t: 3.9, type: 'blip', gain: .7 }, { t: 4.6, type: 'blip', gain: .7 },
+      { t: C.close0, type: 'swish', len: .6 }, { t: C.open0, type: 'swish', len: .6 },
+      { t: 9.1, type: 'blip' },
+      { t: C.reveal, type: 'pop' }, { t: C.reveal + .05, type: 'sparkle' }, { t: C.reveal + .3, type: 'chime', gain: .7 },
+      { t: C.end + .1, type: 'swish', len: .5, gain: .5 },
+    ],
+  };
+
+  window.renderFrame = function (t) {
+    K.animateBackground(t);
+    const sceneOut = K.E.inCubic(K.prog(t, C.end - .3, C.end + .2));
+
+    K.set('#h1', { o: K.win(t, .1, C.close0, .35, .3), y: K.lerp(30, 0, K.E.outCubic(K.prog(t, .1, .5))) });
+    K.set('#h2', { o: K.win(t, 9.0, C.reveal, .35, .3), s: K.lerp(.9, 1, K.E.outBack(K.prog(t, 9.0, 9.4))) });
+    K.set('#h3', { o: K.win(t, C.reveal + .1, C.end, .3, .3), s: K.E.outBack(K.prog(t, C.reveal + .1, C.reveal + .45)) });
+    K.set('#s3', { o: K.win(t, C.reveal + .9, C.end, .4, .3) });
+
+    K.set('#shelf', { o: K.prog(t, .2, .5) * (1 - sceneOut) });
+    KEYS.forEach((k, i) => {
+      const [x, y] = POS[k];
+      const a = .5 + i * .2;
+      let s = K.E.outBack(K.prog(t, a, a + .4));
+      let o = K.prog(t, a, a + .1);
+      // الكورة تختفي وراء الستارة، وتعود عند الكشف بقفزة لطيفة
+      if (k === 'ball' && t > (C.close1 + C.open0) / 2) {
+        const r = K.prog(t, C.reveal, C.reveal + .5);
+        s = K.E.outBack(r); o = K.prog(t, C.reveal, C.reveal + .08);
+      }
+      // ثبات شبه تام أثناء الملاحظة: تنفّس خفيف جدًا فقط
+      const breathe = 1 + .012 * Math.sin(t * 2.2 + i);
+      const bounce = k === 'ball' ? -Math.abs(Math.sin((t - C.reveal) * 5)) * 26 * K.win(t, C.reveal + .4, C.end, .1, .4) : 0;
+      K.set('#o-' + k, { x: x - 125, y: y - 125 + bounce, s: s * breathe, o: o * (1 - sceneOut) });
+      // التسميات تساعد الولي على التسمية مع الطفل، ثم تختفي قبل الستارة حتى لا تكشف الإجابة
+      const n = .5 + 2.7 + i * .7;
+      K.set('#n-' + k, { x: x - 125, y: y + 205, o: K.win(t, n, C.close0 - .1, .3, .3) });
+    });
+
+    // الستارة
+    const closeP = K.E.inOutCubic(K.prog(t, C.close0, C.close1));
+    const openP = K.E.inOutCubic(K.prog(t, C.open0, C.open1));
+    const cover = closeP * (1 - openP); // 0 مفتوحة، 1 مغلقة
+    K.set('#cur-r', { s: 1, o: cover > .001 ? 1 : 0 }); K.$('#cur-r').style.transform = `scaleX(${cover})`;
+    K.set('#cur-l', { o: cover > .001 ? 1 : 0 }); K.$('#cur-l').style.transform = `scaleX(${cover})`;
+    K.set('#rod', { o: K.win(t, C.close0 - .3, C.open1 + .3, .2, .2) });
+
+    // المهلة: ليست عدًّا تنازليًا ولا اختبار سرعة — نقاط تتنفس بهدوء
+    const waitO = K.win(t, 9.5, C.reveal - .1, .4, .3);
+    K.set('#pauseRow', { o: waitO });
+    K.set('#dots', { o: waitO });
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      const ph = Math.sin(t * 2.4 - i * .9);
+      d.style.transform = `scale(${1 + .35 * Math.max(0, ph)})`;
+    });
+
+    K.set('#halo', { x: POS.ball[0] - 210, y: POS.ball[1] - 210, o: K.win(t, C.reveal, C.end, .3, .4) * (.85 + .15 * Math.sin(t * 4)), s: 1 + .05 * Math.sin(t * 3) });
+
+    K.animateEndcard(t, C.end + .1);
+    if (t < C.end) K.set('#endcard', { o: 0 });
+  };
+
+  window.renderCover = function () {
+    window.renderFrame(5.0);
+    KEYS.forEach(k => K.set('#n-' + k, { o: 0 }));
+    K.$('#h1').innerHTML = 'لعبة صغيرة:<br><span class="hl">شنوة تبدّل؟</span>';
+  };
+  window.renderFrame(0);
+</script>
+</body>
+</html>

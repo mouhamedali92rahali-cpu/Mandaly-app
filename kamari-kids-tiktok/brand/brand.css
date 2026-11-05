@@ -1,0 +1,75 @@
+/* KAMARI kids / قمري كيدز — قالب الحركة الأول
+   القيم اللونية هنا مقترحة انطلاقًا من وصف الفيديو المرجعي 8166.mp4
+   (وردي فاتح + بنفسجي داكن + أصفر + لمسات نعناعية) — تُستبدل بالقيم الأصلية عند توفر ملفات الهوية. */
+
+@font-face { font-family: 'Baloo Bhaijaan 2'; font-weight: 600; src: url(fonts/BalooBhaijaan2-600.ttf); }
+@font-face { font-family: 'Baloo Bhaijaan 2'; font-weight: 800; src: url(fonts/BalooBhaijaan2-800.ttf); }
+@font-face { font-family: 'Readex Pro'; font-weight: 400; src: url(fonts/ReadexPro-400.ttf); }
+@font-face { font-family: 'Readex Pro'; font-weight: 600; src: url(fonts/ReadexPro-600.ttf); }
+@font-face { font-family: 'Readex Pro'; font-weight: 700; src: url(fonts/ReadexPro-700.ttf); }
+@font-face { font-family: 'Fredoka'; font-weight: 600; src: url(fonts/Fredoka-600.ttf); }
+@font-face { font-family: 'Fredoka'; font-weight: 700; src: url(fonts/Fredoka-700.ttf); }
+
+:root {
+  /* ألوان مقترحة — مؤقتة */
+  --rose: #FCE6EE;      /* وردي فاتح: خلفيات */
+  --cream: #FFF9F1;     /* أساس محايد حتى لا تكون الهوية وردية بالكامل */
+  --plum: #3A1F5D;      /* بنفسجي داكن: النصوص الأساسية */
+  --plum-2: #6A4596;
+  --sun: #FFC83D;       /* أصفر: تمييز وتهنئة */
+  --sun-soft: #FFE9A8;
+  --mint: #9BE3CF;      /* نعناعي: لمسات ونجاح */
+  --mint-deep: #23977C;
+  --sky: #BFE0F7;       /* أزرق سماوي خفيف: توازن للأولاد والبنات */
+  --ink-soft: #7A6A8E;
+
+  --f-head: 'Baloo Bhaijaan 2', 'Readex Pro', sans-serif;
+  --f-body: 'Readex Pro', sans-serif;
+  --f-latin: 'Fredoka', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; }
+body { background: var(--cream); color: var(--plum); font-family: var(--f-body); direction: rtl; }
+body.transparent { background: transparent; }
+
+#stage { position: absolute; inset: 0; overflow: hidden; }
+.abs { position: absolute; }
+.center { left: 50%; top: 50%; }
+
+/* خلفية: أشكال ناعمة متعددة الألوان */
+.bg-blob { position: absolute; border-radius: 50%; filter: blur(2px); }
+
+/* شريط العنوان: نص قصير وكبير داخل المنطقة الآمنة */
+.headline {
+  position: absolute; left: 70px; right: 150px; /* هامش أيمن لأزرار تيك توك */
+  text-align: center; font-family: var(--f-head); font-weight: 800;
+  font-size: 84px; line-height: 1.25; color: var(--plum);
+}
+.headline .hl { background: linear-gradient(transparent 58%, var(--sun) 58%, var(--sun) 92%, transparent 92%); padding: 0 8px; }
+.sub {
+  position: absolute; left: 70px; right: 150px; text-align: center;
+  font-family: var(--f-body); font-weight: 700; font-size: 58px; line-height: 1.35; color: var(--plum);
+}
+
+/* البطاقة */
+.card {
+  position: absolute; width: 340px; height: 340px; border-radius: 44px; background: #fff;
+  box-shadow: 0 10px 0 rgba(58,31,93,.12), 0 18px 40px rgba(58,31,93,.10);
+  border: 6px solid var(--plum);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.card svg { width: 200px; height: 200px; }
+.card .lbl { font-family: var(--f-head); font-weight: 800; font-size: 56px; color: var(--plum); line-height: 1; }
+
+/* الشعار المؤقت (نص فقط إلى حين توفر ملف الشعار الأصلي) */
+.wordmark { text-align: center; }
+.wordmark .latin { font-family: var(--f-latin); font-weight: 700; font-size: 132px; color: var(--plum); letter-spacing: 2px; direction: ltr; line-height: 1; }
+.wordmark .latin .kids { color: var(--mint-deep); font-weight: 600; }
+.wordmark .ar { font-family: var(--f-head); font-weight: 800; font-size: 96px; color: var(--plum-2); line-height: 1.2; margin-top: 10px; }
+
+/* دليل المناطق الآمنة لتيك توك (يظهر فقط مع ?guides=1) */
+#guides { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 999; }
+body.guides #guides { display: block; }
+#guides div { position: absolute; background: rgba(255,0,80,.22); border: 2px dashed rgba(255,0,80,.8); color: #b00030; font: 600 26px var(--f-body); padding: 8px; }
+.sub b { color: var(--mint-deep); }

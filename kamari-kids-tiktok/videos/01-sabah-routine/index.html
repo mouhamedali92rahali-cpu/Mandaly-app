@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>01 — روتين الصباح (نسخة محسنة)</title>
+<link rel="stylesheet" href="../../brand/brand.css">
+<style>
+  #board { left: 80px; top: 470px; width: 860px; height: 1010px; border-radius: 56px; background: #fff;
+           border: 7px solid var(--plum); box-shadow: 0 14px 0 rgba(58,31,93,.12); }
+  #board-title { position: absolute; top: 34px; left: 0; right: 0; text-align: center; font-family: var(--f-head);
+                 font-weight: 800; font-size: 74px; line-height: 1.1; }
+  #board-title .nm { color: var(--mint-deep); }
+  #board-sun { position: absolute; top: 34px; right: 70px; width: 86px; height: 86px; }
+  .col { position: absolute; top: 160px; width: 380px; height: 820px; border-radius: 40px; }
+  #col-todo { right: 30px; background: var(--rose); }
+  #col-done { left: 30px; background: #E6F8F1; }
+  .col h3 { text-align: center; font-family: var(--f-head); font-weight: 800; font-size: 58px; margin-top: 18px; }
+  #col-done h3 { color: var(--mint-deep); }
+  .divider { position: absolute; top: 200px; bottom: 60px; left: 50%; width: 0; border-left: 6px dashed #D9CBE6; }
+  .bubble { padding: 18px 40px; border-radius: 60px; background: #fff; border: 6px solid var(--plum);
+            font-family: var(--f-head); font-weight: 800; font-size: 76px; line-height: 1.1; white-space: nowrap; }
+  .badge { position: absolute; width: 78px; height: 78px; top: -30px; right: -30px; }
+  .glow { position: absolute; inset: -16px; border-radius: 60px; border: 10px solid var(--sun); }
+  #sparkles .abs { width: 60px; height: 60px; left: 0; top: 0; }
+  .card.abs { left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="headline" id="hook" style="top:200px">كل صباح <span class="hl">نعاودو</span><br>نفس الكلام؟</div>
+  <div class="abs" id="clock" style="left:330px;top:720px;width:420px;height:420px"></div>
+  <div class="abs bubble" id="b1" style="right:560px;top:640px">قوم!</div>
+  <div class="abs bubble" id="b2" style="left:610px;top:1130px">البس!</div>
+
+  <div class="sub" id="cap1" style="top:300px">نخلّيو الخطوات قدّامو… <b>بالصّور</b></div>
+  <div class="sub" id="cap2" style="top:300px">نشوفو الخطوة، ونعملوها <b>معاه</b></div>
+  <div class="sub" id="cap3" style="top:300px">وبعد… <b>هو</b> ينقل الكرت</div>
+  <div class="sub" id="cap4" style="top:250px;font-size:56px;color:var(--plum);font-weight:700">خطوة بخطوة،<br>نعاونوه يشارك في روتينو</div>
+
+  <div class="abs" id="board">
+    <div id="board-sun"></div>
+    <div id="board-title">روتين <span class="nm" id="child-name">ياسين</span></div>
+    <div class="col" id="col-todo"><h3>باش نعمل</h3></div>
+    <div class="col" id="col-done"><h3>عملت!</h3></div>
+  </div>
+  <div class="card abs" id="card1"><div class="glow" id="glow1"></div><div class="ico" id="ico1"></div><div class="lbl">نغسل وجهي</div><div class="badge" id="chk1"></div></div>
+  <div class="card abs" id="card2"><div class="glow" id="glow2"></div><div class="ico" id="ico2"></div><div class="lbl">نلبس</div><div class="badge" id="chk2"></div></div>
+  <div id="sparkles"></div>
+</div>
+<script src="../../engine/lib.js"></script>
+<script src="../../brand/icons.js"></script>
+<script src="../../brand/common.js"></script>
+<script>
+  // اسم الطفل قابل للتغيير من الرابط: ?name=قمر (فكرة 04: «لوحة ياسين تولّي لوحة قمر»)
+  if (K.params.get('name')) document.getElementById('child-name').textContent = K.params.get('name');
+
+  const stage = K.$('#stage');
+  K.background(stage);
+  K.endcard(stage, { line1: 'تابع قمري كيدز', line2: 'باش تشوف التجربة' });
+  K.$('#clock').innerHTML = ICONS.clock;
+  K.$('#board-sun').innerHTML = ICONS.sun;
+  K.$('#ico1').innerHTML = ICONS.faceWash;
+  K.$('#ico2').innerHTML = ICONS.shirt;
+  K.$('#chk1').innerHTML = ICONS.check;
+  K.$('#chk2').innerHTML = ICONS.check;
+  const sp = K.$('#sparkles');
+  const SPARK = [[250, 690], [470, 760], [190, 1080], [520, 1430], [120, 1350]];
+  SPARK.forEach((_, i) => { const d = document.createElement('div'); d.className = 'abs'; d.id = 'sp' + i; d.innerHTML = ICONS.star; sp.appendChild(d); });
+
+  // مراكز البطاقات: العمود الأيمن «باش نعمل» ثم العمود الأيسر «عملت!»
+  const TODO = [[715, 925], [715, 1290]], DONE = [[305, 925], [305, 1290]];
+  const MOVE = [{ hi: 6.1, go: 8.0, land: 8.9 }, { hi: 9.5, go: 11.0, land: 11.9 }];
+
+  window.VIDEO = {
+    duration: 20, fps: 30,
+    keyframes: [1.5, 4.5, 7.2, 8.5, 9.6, 12.2, 14.5, 18.5],
+    guideTimes: [1.5, 7.2, 14.5, 18.5],
+    sfx: [
+      { t: .05, type: 'ring', len: 1.1 }, { t: .55, type: 'blip' }, { t: 1.05, type: 'blip' },
+      { t: 3.05, type: 'swish', len: .5 }, { t: 3.6, type: 'pop', gain: .6 }, { t: 3.75, type: 'pop', gain: .6 },
+      { t: 6.1, type: 'blip' }, { t: 8.0, type: 'swish', len: .5, gain: .6 }, { t: 8.9, type: 'pop' }, { t: 9.0, type: 'sparkle' },
+      { t: 9.5, type: 'blip' }, { t: 11.0, type: 'swish', len: .5, gain: .6 }, { t: 11.9, type: 'pop' }, { t: 12.0, type: 'sparkle' },
+      { t: 12.5, type: 'chime', gain: .8 }, { t: 16.0, type: 'swish', len: .6, gain: .5 }, { t: 16.6, type: 'chime', gain: .6 },
+    ],
+  };
+
+  function cardPos(i, t) {
+    const m = MOVE[i];
+    const p = K.E.inOutCubic(K.prog(t, m.go, m.land));
+    const [x0, y0] = TODO[i], [x1, y1] = DONE[i];
+    const x = K.lerp(x0, x1, p), y = K.lerp(y0, y1, p) - Math.sin(Math.PI * p) * 90; // قوس خفيف
+    const lift = Math.sin(Math.PI * p);
+    const hi = K.win(t, m.hi, m.go + .2, .25, .3);
+    const pulse = 1 + .04 * hi * Math.sin((t - m.hi) * 9);
+    return { x, y, s: (1 + .08 * lift) * pulse, r: -6 * lift, hi, p };
+  }
+
+  window.renderFrame = function (t) {
+    K.animateBackground(t);
+    // 0–3ث: المنبه + عبارتان ثم الاستقرار
+    const hookO = 1 - K.prog(t, 2.7, 3.1);
+    K.set('#hook', { o: K.E.outCubic(K.prog(t, .1, .45)) * hookO, y: K.lerp(30, 0, K.E.outCubic(K.prog(t, .1, .5))) });
+    const shake = t < 1.2 ? Math.sin(t * 60) * 7 * (1 - t / 1.2) : 0;
+    const clockOut = K.E.inCubic(K.prog(t, 2.7, 3.2));
+    K.set('#clock', { r: shake, s: K.lerp(1, .3, clockOut) * K.E.outBack(K.prog(t, 0, .4)), y: -500 * clockOut, x: 300 * clockOut, o: 1 - clockOut });
+    K.set('#b1', { s: K.E.outBack(K.prog(t, .5, .8)), o: K.prog(t, .5, .6) * hookO, r: -4 });
+    K.set('#b2', { s: K.E.outBack(K.prog(t, 1.0, 1.3)), o: K.prog(t, 1.0, 1.1) * hookO, r: 4 });
+
+    // 3–6ث: اللوحة والبطاقتان
+    const bp = K.E.outCubic(K.prog(t, 3.0, 3.6));
+    const endOut = K.E.inCubic(K.prog(t, 15.7, 16.2));
+    K.set('#board', { y: K.lerp(900, 0, bp), o: K.prog(t, 3.0, 3.3) * (1 - endOut), s: 1 - .05 * endOut });
+
+    K.set('#cap1', { o: K.win(t, 3.4, 6.1) });
+    K.set('#cap2', { o: K.win(t, 6.1, 9.45) });
+    K.set('#cap3', { o: K.win(t, 9.45, 12.3) });
+    K.set('#cap4', { o: K.win(t, 12.4, 16.0, .4) });
+
+    [0, 1].forEach(i => {
+      const c = cardPos(i, t);
+      const appear = K.E.outBack(K.prog(t, 3.5 + i * .15, 3.95 + i * .15));
+      K.set('#card' + (i + 1), { x: c.x - 170, y: c.y - 170, s: c.s * appear, r: c.r, o: K.prog(t, 3.5 + i * .15, 3.6 + i * .15) * (1 - endOut) });
+      K.set('#glow' + (i + 1), { o: c.hi });
+      // الفعل نفسه يتحرك قليلًا أثناء «نعملوها معاه»
+      const act = K.win(t, MOVE[i].hi + .4, MOVE[i].go, .2, .2);
+      K.set('#ico' + (i + 1), { r: Math.sin(t * 14) * 6 * act, y: Math.sin(t * 7) * -6 * act });
+      const land = MOVE[i].land;
+      K.set('#chk' + (i + 1), { s: K.E.outBack(K.prog(t, land, land + .35)), o: K.prog(t, land, land + .1) });
+    });
+
+    // 12–16ث: وقفة هادئة + نجوم صغيرة (بلا مزايا جديدة)
+    SPARK.forEach(([x, y], i) => {
+      const a = 12.5 + i * .12;
+      const o = K.win(t, a, 15.8, .3, .4);
+      K.set('#sp' + i, { x, y: y + Math.sin(t * 2 + i) * 10, s: K.E.outBack(K.prog(t, a, a + .4)) * (1 + .1 * Math.sin(t * 3 + i)), r: t * 20 + i * 30, o });
+    });
+
+    // 16–20ث: الشعار والدعوة
+    K.animateEndcard(t, 16.1);
+    if (t < 16) K.set('#endcard', { o: 0 });
+  };
+
+  // غلاف المنشور: سؤال المنبه + لمحة من اللوحة
+  window.renderCover = function () {
+    window.renderFrame(9.3);
+    ['#cap1', '#cap2', '#cap3', '#cap4', '#b1', '#b2', '#clock'].forEach(s => K.set(s, { o: 0 }));
+    K.set('#hook', { o: 1, y: 0 });
+    K.$('#hook').style.top = '170px';
+  };
+  window.renderFrame(0);
+</script>
+</body>
+</html>
