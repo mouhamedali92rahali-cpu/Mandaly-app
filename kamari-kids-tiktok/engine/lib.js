@@ -36,5 +36,47 @@
     document.body.appendChild(g);
   });
 
-  window.K = { clamp, lerp, prog, E, win, set, $, params };
+  // تقطيع النص إلى كلمات (بترتيب القراءة) لظهورها كلمة كلمة
+  function words(el) {
+    if (typeof el === 'string') el = document.querySelector(el);
+    if (el._words) return el._words;
+    const out = [];
+    const walk = (node) => {
+      [...node.childNodes].forEach(ch => {
+        if (ch.nodeType === 3) {
+          const parts = ch.textContent.split(/(\s+)/);
+          const frag = document.createDocumentFragment();
+          parts.forEach(p => {
+            if (!p) return;
+            if (/^\s+$/.test(p)) { frag.appendChild(document.createTextNode(p)); return; }
+            const sp = document.createElement('span'); sp.className = 'w'; sp.textContent = p; frag.appendChild(sp); out.push(sp);
+          });
+          ch.replaceWith(frag);
+        } else if (ch.nodeType === 1 && !ch.classList.contains('w')) walk(ch);
+      });
+    };
+    walk(el);
+    el._words = out;
+    return out;
+  }
+  // يُظهر الكلمات بالتتابع ابتداءً من start، بفاصل per ثانية. الأشرطة (.bar) تنبسط مع أول كلمة فيها.
+  // يعيد أزمنة ظهور الكلمات (مفيد لمزامنة النقرات الصوتية).
+  function reveal(el, t, start, per = .22, out = Infinity) {
+    if (typeof el === 'string') el = document.querySelector(el);
+    const ws = words(el);
+    const fadeOut = 1 - E.inCubic(prog(t, out - .3, out));
+    el.style.opacity = fadeOut; el.style.visibility = fadeOut <= 0.001 || t < start ? 'hidden' : 'visible';
+    ws.forEach((w, i) => {
+      const a = start + i * per, p = E.outCubic(prog(t, a, a + .28));
+      w.style.opacity = p; w.style.transform = `translateY(${(1 - p) * 22}px)`;
+    });
+    el.querySelectorAll('.bar').forEach(b => {
+      const first = ws.findIndex(w => b.contains(w));
+      const a = start + Math.max(0, first) * per - .12;
+      b.style.setProperty('--bar', E.outCubic(prog(t, a, a + .3)).toFixed(3));
+    });
+    return ws.map((_, i) => start + i * per);
+  }
+
+  window.K = { clamp, lerp, prog, E, win, set, $, params, words, reveal };
 })();

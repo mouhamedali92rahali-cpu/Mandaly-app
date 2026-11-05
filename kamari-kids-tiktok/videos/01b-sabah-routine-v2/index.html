@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>01b — روتين الصباح (نسخة 2: ليل/نهار + كتابة كلمة كلمة + صوت عائلي)</title>
+<link rel="stylesheet" href="../../brand/brand.css">
+<style>
+  #night, #night2 { position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, var(--night-2), var(--night) 70%); }
+  #day { position: absolute; inset: 0; background: var(--cream); overflow: hidden; }
+  .starDot { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; background: #FFF4C9; }
+  #content { position: absolute; inset: 0; }
+  #endcard2 { position: absolute; inset: 0; }
+
+  .headline { top: 252px; font-size: 80px; }
+  #board { left: 80px; top: 490px; width: 860px; height: 1000px; border-radius: 56px; background: #fff;
+           border: 7px solid var(--plum); box-shadow: 0 14px 0 rgba(58,31,93,.12); }
+  #board-title { position: absolute; top: 34px; left: 0; right: 0; text-align: center; font-family: var(--f-head);
+                 font-weight: 800; font-size: 72px; line-height: 1.1; }
+  #board-title .nm { color: var(--mint-deep); }
+  #board-sun { position: absolute; top: 34px; right: 70px; width: 86px; height: 86px; }
+  .col { position: absolute; top: 160px; width: 380px; height: 810px; border-radius: 40px; }
+  #col-todo { right: 30px; background: var(--rose); }
+  #col-done { left: 30px; background: #E6F8F1; }
+  .col h3 { text-align: center; font-family: var(--f-head); font-weight: 800; font-size: 56px; margin-top: 16px; }
+  #col-done h3 { color: var(--mint-deep); }
+  .card.abs { left: 0; top: 0; }
+  .badge { position: absolute; width: 78px; height: 78px; top: -30px; right: -30px; }
+  .glow { position: absolute; inset: -16px; border-radius: 60px; border: 10px solid var(--sun); }
+  .bubble { left: 0; top: 0; padding: 14px 36px 20px; border-radius: 60px; background: var(--cream); color: var(--night);
+            font-family: var(--f-head); font-weight: 800; font-size: 70px; line-height: 1.1; white-space: nowrap; }
+  .bubble::after { content: ''; position: absolute; bottom: -16px; right: 50%; width: 34px; height: 34px; background: var(--cream);
+                   transform: rotate(45deg); border-radius: 6px; }
+  .spk { left: 0; top: 0; width: 60px; height: 60px; }
+  .drop { left: 0; top: 0; width: 26px; height: 34px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #4FA8E8; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="night"></div>
+  <div id="day"></div>
+
+  <div id="content">
+    <!-- مشهد الليل/الفوضى -->
+    <div class="headline on-night-text" id="h0">كل صباح <span class="bar on-night">نعاودو نفس الكلام؟</span></div>
+    <div class="abs" id="clock" style="left:0;top:0;width:400px;height:400px"></div>
+    <div class="abs bubble" id="b1">قوم!</div>
+    <div class="abs bubble" id="b2">البس!</div>
+    <div class="abs bubble" id="b3">فطّر!</div>
+
+    <!-- مشاهد النهار -->
+    <div class="headline" id="h1">نخلّيو الخطوات قدّامو<br><span class="bar">بالصّور</span></div>
+    <div class="headline" id="h2">نشوفو الخطوة،<br><span class="bar">ونعملوها معاه</span></div>
+    <div class="headline" id="h3">وبعد…<br><span class="bar sun">هو ينقل الكرت</span></div>
+    <div class="headline" id="h4">خطوة بخطوة، نعاونوه<br><span class="bar">يشارك في روتينو</span></div>
+
+    <div class="abs" id="board">
+      <div id="board-sun"></div>
+      <div id="board-title">روتين <span class="nm" id="child-name">ياسين</span></div>
+      <div class="col" id="col-todo"><h3>باش نعمل</h3></div>
+      <div class="col" id="col-done"><h3>عملت!</h3></div>
+    </div>
+    <div class="card abs" id="card1"><div class="glow" id="glow1"></div><div class="ico" id="ico1"></div><div class="lbl">نغسل وجهي</div><div class="badge" id="chk1"></div></div>
+    <div class="card abs" id="card2"><div class="glow" id="glow2"></div><div class="ico" id="ico2"></div><div class="lbl">نلبس</div><div class="badge" id="chk2"></div></div>
+    <div id="fx"></div>
+  </div>
+
+  <div id="night2"></div>
+  <div id="endcard2">
+    <div class="abs" id="e-moon" style="left:420px;top:560px;width:240px;height:240px"></div>
+    <div class="abs wordmark" id="e-mark" style="left:60px;right:60px;top:830px">
+      <div class="latin on-night-text">KAMARI <span class="kids" style="color:var(--mint)">kids</span></div>
+      <div class="ar" style="color:var(--sun)">قمري كيدز</div>
+    </div>
+    <div class="headline on-night-text" id="e-cta" style="top:1180px;font-size:62px;right:130px;left:60px">تابعنا <span class="bar on-night">باش تشوف التجربة</span></div>
+  </div>
+
+  <div id="mark"><div class="m" id="markMoon"></div><div class="t" id="markText">قمري كيدز</div></div>
+</div>
+<script src="../../engine/lib.js"></script>
+<script src="../../brand/icons.js"></script>
+<script>
+  if (K.params.get('name')) document.getElementById('child-name').textContent = K.params.get('name');
+  const $ = K.$;
+  $('#clock').innerHTML = ICONS.clock;
+  $('#board-sun').innerHTML = ICONS.sun;
+  $('#ico1').innerHTML = ICONS.faceWash; $('#ico2').innerHTML = ICONS.shirt;
+  $('#chk1').innerHTML = ICONS.check; $('#chk2').innerHTML = ICONS.check;
+  $('#markMoon').innerHTML = ICONS.moon; $('#e-moon').innerHTML = ICONS.moon;
+
+  // نهار: بقع ألوان ناعمة
+  $('#day').innerHTML = `
+    <div class="bg-blob" id="blob1" style="width:760px;height:760px;left:-260px;top:-220px;background:var(--rose)"></div>
+    <div class="bg-blob" id="blob2" style="width:620px;height:620px;right:-240px;top:900px;background:var(--mint);opacity:.45"></div>
+    <div class="bg-blob" id="blob3" style="width:520px;height:520px;left:-200px;bottom:-160px;background:var(--sky);opacity:.55"></div>`;
+  // نجوم الليل (مواضع ثابتة محسوبة)
+  const STARS = [];
+  for (let i = 0; i < 34; i++) STARS.push([(i * 337 + 91) % 1040 + 20, (i * 571 + 133) % 1860 + 30, .5 + ((i * 7) % 10) / 10, i * .7]);
+  ['night', 'night2'].forEach(id => STARS.forEach((s, i) => {
+    const d = document.createElement('div'); d.className = 'starDot'; d.id = `${id}-s${i}`; $('#' + id).appendChild(d);
+  }));
+  // نجوم الاحتفال + قطرات ماء
+  const SPARK = [[250, 720], [470, 790], [190, 1100], [520, 1450], [120, 1380]];
+  SPARK.forEach((_, i) => { const d = document.createElement('div'); d.className = 'abs spk'; d.id = 'sp' + i; d.innerHTML = ICONS.star; $('#fx').appendChild(d); });
+  for (let i = 0; i < 3; i++) { const d = document.createElement('div'); d.className = 'abs drop'; d.id = 'dr' + i; $('#fx').appendChild(d); }
+
+  // ===== الإيقاع =====
+  const T = {
+    h0: .2, ring: .25, b: [.75, 1.15, 1.55], sunrise: 3.3, h1: 4.15,
+    m1: { hi: 6.7, act: 7.1, go: 8.4, land: 9.25 }, h2: 6.55,
+    m2: { hi: 10.15, act: 10.5, go: 11.6, land: 12.45 }, h3: 10.0,
+    h4: 13.3, moonrise: 17.0, end: 17.65, dur: 20,
+  };
+  const PER = .2; // فاصل ظهور الكلمات
+  const CARD = 340, TODO = [[715, 945], [715, 1300]], DONE = [[305, 945], [305, 1300]];
+  const MOVE = [T.m1, T.m2];
+  const CLOCK = [540, 1000];
+
+  // نقرات الكلمات تُحسب من عدد الكلمات حتى تبقى متزامنة إن تغيّر النص
+  const wordCues = (sel, start, gain = .8) => K.words(sel).map((_, i) => ({ t: start + i * PER, type: 'tap', pitch: i, gain }));
+
+  window.VIDEO = {
+    duration: T.dur, fps: 30,
+    // موسيقى أوكوليلي أصلية تبدأ مع «النهار» وتتوقف قبل النهاية (الليل يبقى هادئًا)
+    music: { start: T.sunrise + .1, end: T.moonrise + .4, gain: 1 },
+    keyframes: [1.0, 2.6, 3.6, 5.2, 7.4, 8.8, 11.2, 12.8, 15.5, 17.3, 19.0],
+    guideTimes: [2.6, 7.4, 15.5, 19.0],
+    sfx: [
+      { t: 0, type: 'ticktock', count: 2 },
+      { t: T.ring, type: 'ring', len: .9 },
+      ...wordCues('#h0', T.h0, .6),
+      ...T.b.map((t, i) => ({ t, type: 'bubble', pan: [-.4, .4, -.2][i] })),
+      { t: 2.0, type: 'ticktock', count: 3, gain: .8 },
+      { t: T.sunrise, type: 'sunrise' },
+      { t: 3.95, type: 'slide', len: .45, gain: .7 }, { t: 4.4, type: 'pop', gain: .5 },
+      ...wordCues('#h1', T.h1),
+      ...wordCues('#h2', T.h2),
+      // الكرت الأول: انتباه → قطرات ماء → رفع → انزلاق → استقرار → نجاح
+      { t: T.m1.hi, type: 'tap', pitch: 5, gain: 1.2 },
+      { t: T.m1.act + .1, type: 'bubble', gain: .5, pan: .3 }, { t: T.m1.act + .4, type: 'bubble', gain: .45, pan: .4 }, { t: T.m1.act + .7, type: 'bubble', gain: .4, pan: .2 },
+      { t: T.m1.go, type: 'lift' }, { t: T.m1.go + .1, type: 'slide', len: .7 }, { t: T.m1.land, type: 'pop' }, { t: T.m1.land + .08, type: 'success' },
+      ...wordCues('#h3', T.h3),
+      // الكرت الثاني: انتباه → حفيف قماش → رفع → انزلاق → استقرار → نجاح (درجة أعلى)
+      { t: T.m2.hi, type: 'tap', pitch: 6, gain: 1.2 },
+      { t: T.m2.act + .15, type: 'swish', len: .35, gain: .45 }, { t: T.m2.act + .55, type: 'swish', len: .35, gain: .4 },
+      { t: T.m2.go, type: 'lift' }, { t: T.m2.go + .1, type: 'slide', len: .7 }, { t: T.m2.land, type: 'pop' }, { t: T.m2.land + .08, type: 'success', pitch: 1 },
+      ...wordCues('#h4', T.h4),
+      { t: T.h4 + .9, type: 'sparkle', gain: .8 },
+      { t: T.moonrise, type: 'swish', len: .7, gain: .7 },
+      { t: T.end + .05, type: 'logo' },
+      ...wordCues("#e-cta", T.end + .55, .5),
+    ],
+  };
+
+  function wipe(sel, t, a, b, cx, cy) {
+    const r = K.E.inOutCubic(K.prog(t, a, b)) * 2300;
+    $(sel).style.clipPath = `circle(${r}px at ${cx}px ${cy}px)`;
+    $(sel).style.visibility = r < 1 ? 'hidden' : 'visible';
+  }
+
+  window.renderFrame = function (t) {
+    // الطبقات: ليل ← نهار (دائرة تتسع من المنبه) ← ليل (القمر يطلع)
+    wipe('#day', t, T.sunrise, T.sunrise + .8, CLOCK[0], CLOCK[1]);
+    wipe('#night2', t, T.moonrise, T.moonrise + .75, 540, 680);
+    ['night', 'night2'].forEach(id => STARS.forEach(([x, y, s, ph], i) => {
+      K.set(`#${id}-s${i}`, { x, y, s: s * (1 + .5 * Math.sin(t * 3 + ph)), o: .45 + .55 * (0.5 + 0.5 * Math.sin(t * 2.2 + ph)) });
+    }));
+    K.set('#blob1', { x: Math.sin(t * .35) * 30, y: Math.cos(t * .3) * 20 });
+    K.set('#blob2', { x: Math.cos(t * .28) * 26, y: Math.sin(t * .33) * 30 });
+    K.set('#blob3', { x: Math.sin(t * .25 + 1) * 24, y: Math.cos(t * .31) * 18 });
+
+    // العلامة الثابتة: فاتحة على الليل، بنفسجية على النهار
+    const isDay = t > T.sunrise + .35 && t < T.moonrise + .3;
+    $('#markText').style.color = isDay ? 'var(--plum)' : 'var(--cream)';
+    K.set('#mark', { o: K.prog(t, 0, .3) * (1 - K.win(t, T.end, T.dur + 1, .3, .1) * 0) });
+
+    // --- الليل: المنبه والفقاعات ---
+    const nightOut = K.E.inCubic(K.prog(t, T.sunrise - .1, T.sunrise + .4));
+    K.reveal('#h0', t, T.h0, PER, T.sunrise + .1);
+    const shake = t < 1.4 ? Math.sin(t * 60) * 8 * (1 - t / 1.4) : Math.sin(t * 40) * 2 * K.win(t, 2.0, 3.2);
+    K.set('#clock', { x: CLOCK[0] - 200, y: CLOCK[1] - 200, r: shake, s: K.E.outBack(K.prog(t, 0, .45)) * (1 - .6 * nightOut), o: 1 - nightOut });
+    const BP = [[230, 760, -6], [700, 1180, 5], [250, 1270, -3]];
+    T.b.forEach((a, i) => {
+      const [x, y, r] = BP[i];
+      K.set('#b' + (i + 1), { x: x - 130, y: y - 60 + Math.sin(t * 3 + i) * 6, r, s: K.E.outBack(K.prog(t, a, a + .3)), o: K.prog(t, a, a + .08) * (1 - nightOut) });
+    });
+
+    // --- النهار ---
+    K.reveal('#h1', t, T.h1, PER, T.h2 - .05);
+    K.reveal('#h2', t, T.h2 + .1, PER, T.h3 - .05);
+    K.reveal('#h3', t, T.h3 + .1, PER, T.h4 - .05);
+    K.reveal('#h4', t, T.h4 + .1, PER, T.moonrise + .1);
+
+    const bp = K.E.outCubic(K.prog(t, 3.8, 4.4));
+    K.set('#board', { y: K.lerp(1000, 0, bp), o: K.prog(t, 3.8, 3.9) });
+
+    [0, 1].forEach(i => {
+      const m = MOVE[i];
+      const p = K.E.inOutCubic(K.prog(t, m.go, m.land));
+      const [x0, y0] = TODO[i], [x1, y1] = DONE[i];
+      const x = K.lerp(x0, x1, p), y = K.lerp(y0, y1, p) - Math.sin(Math.PI * p) * 90;
+      const lift = Math.sin(Math.PI * p);
+      const hi = K.win(t, m.hi, m.go + .2, .25, .3);
+      const pulse = 1 + .04 * hi * Math.sin((t - m.hi) * 9);
+      const appear = K.E.outBack(K.prog(t, 4.2 + i * .15, 4.65 + i * .15));
+      K.set('#card' + (i + 1), { x: x - CARD / 2, y: y - CARD / 2, s: (1 + .08 * lift) * pulse * appear, r: -6 * lift, o: K.prog(t, 4.2 + i * .15, 4.3 + i * .15) });
+      K.set('#glow' + (i + 1), { o: hi });
+      const act = K.win(t, m.act, m.go, .2, .2);
+      K.set('#ico' + (i + 1), { r: Math.sin(t * 14) * 6 * act, y: Math.sin(t * 7) * -6 * act });
+      K.set('#chk' + (i + 1), { s: K.E.outBack(K.prog(t, m.land, m.land + .35)), o: K.prog(t, m.land, m.land + .1) });
+    });
+    // قطرات ماء تتطاير أثناء «نغسل وجهي»
+    for (let k = 0; k < 3; k++) {
+      const a = T.m1.act + .1 + k * .3, p = K.prog(t, a, a + .55);
+      const [cx, cy] = TODO[0];
+      K.set('#dr' + k, { x: cx + [-120, 90, -40][k] + [-40, 50, -10][k] * p, y: cy - 120 - 120 * Math.sin(Math.PI * p) + 60 * p, o: p > 0 && p < 1 ? 1 - p * p : 0, s: .8 + .4 * (1 - p) });
+    }
+    SPARK.forEach(([x, y], i) => {
+      const a = T.h4 + .9 + i * .1;
+      K.set('#sp' + i, { x, y: y + Math.sin(t * 2 + i) * 10, s: K.E.outBack(K.prog(t, a, a + .4)) * (1 + .1 * Math.sin(t * 3 + i)), r: t * 20 + i * 30, o: K.win(t, a, T.moonrise + .2, .3, .3) });
+    });
+
+    // --- النهاية: القمر يطلع على الليل ---
+    const e = T.end;
+    K.set('#endcard2', { o: K.prog(t, e - .2, e) });
+    K.set('#e-moon', { s: K.lerp(.3, 1, K.E.outBack(K.prog(t, e, e + .7))), y: K.lerp(120, 0, K.E.outCubic(K.prog(t, e, e + .7))), r: Math.sin((t - e) * 1.6) * 5 });
+    K.set('#e-mark', { y: K.lerp(40, 0, K.E.outCubic(K.prog(t, e + .2, e + .8))), o: K.prog(t, e + .2, e + .6) });
+    K.reveal("#e-cta", t, e + .55, PER);
+  };
+
+  // الغلاف: الليل + السؤال (يُقرأ كصورة مصغّرة في الملف الشخصي)
+  window.renderCover = function () {
+    window.renderFrame(2.6);
+    T.b.forEach((_, i) => K.set('#b' + (i + 1), { o: 0 }));
+  };
+  window.renderFrame(0);
+</script>
+</body>
+</html>

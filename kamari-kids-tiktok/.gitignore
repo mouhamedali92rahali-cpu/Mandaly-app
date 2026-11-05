@@ -6,3 +6,4 @@ videos/*/footage/*
 !videos/*/footage/.gitkeep
 # التعليق الصوتي يُرفع فقط إن أراد صاحب المشروع ذلك
 *.sfx.wav
+*.music.wav

@@ -43,57 +43,8 @@ function run(cmd, argv, { input } = {}) {
   });
 }
 
-// ---------- مؤثرات صوتية مولّدة ----------
-const SR = 44100;
-function synthSfx(cues, duration) {
-  const n = Math.ceil(duration * SR);
-  const buf = new Float32Array(n);
-  const add = (t0, len, fn) => {
-    const s0 = Math.floor(t0 * SR), L = Math.floor(len * SR);
-    for (let i = 0; i < L && s0 + i < n; i++) if (s0 + i >= 0) buf[s0 + i] += fn(i / SR, i / L);
-  };
-  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
-  for (const c of cues) {
-    const g = c.gain ?? 1;
-    switch (c.type) {
-      case 'pop': // نقرة ناعمة عند استقرار بطاقة
-        add(c.t, .14, (t, p) => g * .45 * Math.sin(2 * Math.PI * (520 - 900 * t) * t) * Math.exp(-t * 38));
-        break;
-      case 'blip': // ظهور نص
-        add(c.t, .09, (t) => g * .16 * Math.sin(2 * Math.PI * 990 * t) * Math.exp(-t * 55));
-        break;
-      case 'ring': { // منبه مكتوم (ليس مزعجًا)
-        const len = c.len ?? .9;
-        add(c.t, len, (t, p) => {
-          const f = (Math.floor(t * 16) % 2) ? 1320 : 1180;
-          const gate = (Math.floor(t * 8) % 2) ? .25 : 1;
-          return g * .09 * gate * Math.sin(2 * Math.PI * f * t) * (1 - p);
-        });
-        break;
-      }
-      case 'swish': { // حركة ستارة/انتقال: ضجيج مفلتر
-        let lp = 0; const len = c.len ?? .45;
-        add(c.t, len, (t, p) => { lp += (rnd() - lp) * (.05 + .25 * Math.sin(Math.PI * p)); return g * .5 * lp * Math.sin(Math.PI * p); });
-        break;
-      }
-      case 'chime': // تهنئة هادئة
-        add(c.t, 1.6, (t) => g * .12 * Math.exp(-t * 2.6) *
-          (Math.sin(2 * Math.PI * 784 * t) + .6 * Math.sin(2 * Math.PI * 1175 * t) + .35 * Math.sin(2 * Math.PI * 1568 * t)));
-        break;
-      case 'sparkle':
-        for (let k = 0; k < 4; k++) add(c.t + k * .07, .25, (t) => g * .07 * Math.sin(2 * Math.PI * (1800 + k * 260) * t) * Math.exp(-t * 16));
-        break;
-    }
-  }
-  // مضغوط بسيط لتفادي التشبع
-  const pcm = Buffer.alloc(n * 2);
-  for (let i = 0; i < n; i++) pcm.writeInt16LE(Math.round(Math.tanh(buf[i] * 1.2) * 32767 * .8), i * 2);
-  const h = Buffer.alloc(44);
-  h.write('RIFF', 0); h.writeUInt32LE(36 + pcm.length, 4); h.write('WAVE', 8); h.write('fmt ', 12);
-  h.writeUInt32LE(16, 16); h.writeUInt16LE(1, 20); h.writeUInt16LE(1, 22); h.writeUInt32LE(SR, 24);
-  h.writeUInt32LE(SR * 2, 28); h.writeUInt16LE(2, 32); h.writeUInt16LE(16, 34); h.write('data', 36); h.writeUInt32LE(pcm.length, 40);
-  return Buffer.concat([h, pcm]);
-}
+// الصوت: engine/sound.mjs (مؤثرات + موسيقى خلفية أصلية اختيارية)
+import { renderSfx, renderMusic, SR } from './sound.mjs';
 
 // ---------- التصيير ----------
 const browser = await chromium.launch();
@@ -134,7 +85,11 @@ if (stillsOnly) { await browser.close(); process.exit(0); }
 
 V = await open(base ? 'transparent=1' : '');
 const sfxPath = path.join(ROOT, 'out', `${slug}.sfx.wav`);
-fs.writeFileSync(sfxPath, synthSfx(V.sfx || [], V.duration));
+fs.writeFileSync(sfxPath, renderSfx(V.sfx || [], V.duration));
+// موسيقى خلفية: تُفعَّل من VIDEO.music، وتُلغى بـ --no-music
+const musicPath = path.join(ROOT, 'out', `${slug}.music.wav`);
+const useMusic = !!V.music && !args.includes('--no-music');
+if (useMusic) fs.writeFileSync(musicPath, renderMusic(V.music, V.duration));
 const vo = ['vo.wav', 'vo.m4a', 'vo.mp3'].map(f => path.join(videoDir, f)).find(f => fs.existsSync(f));
 
 const ff = ['-y', '-hide_banner', '-loglevel', 'error'];
@@ -142,6 +97,7 @@ let idx = 0; const inputs = {};
 if (base) { ff.push('-i', path.resolve(base)); inputs.base = idx++; }
 ff.push('-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'png', '-i', '-'); inputs.frames = idx++;
 ff.push('-i', sfxPath); inputs.sfx = idx++;
+if (useMusic) { ff.push('-i', musicPath); inputs.music = idx++; }
 if (vo) { ff.push('-i', vo); inputs.vo = idx++; }
 
 const fc = [];
@@ -149,10 +105,20 @@ if (base) fc.push(`[${inputs.base}:v]fps=${fps},scale=1080:1920,setsar=1[bv];[bv
 else fc.push(`[${inputs.frames}:v]format=yuv420p[v]`);
 // مزج الصوت: المؤثرات تنخفض قليلًا عند وجود تعليق صوتي؛ صوت اللقطات الأصلي (إن وجد) يبقى خافتًا
 const aParts = [`[${inputs.sfx}:a]volume=${vo ? 0.6 : 1}[s]`]; const aLabels = ['[s]'];
-if (vo) { aParts.push(`[${inputs.vo}:a]aresample=${SR},volume=1.0[vo]`); aLabels.push('[vo]'); }
+if (vo) {
+  aParts.push(`[${inputs.vo}:a]aresample=${SR},aformat=channel_layouts=stereo,asplit=2[vo][voKey]`); aLabels.push('[vo]');
+}
+if (useMusic) {
+  // الموسيقى تنخفض تلقائيًا كلما تكلّم المعلّق (ducking)
+  if (vo) aParts.push(`[${inputs.music}:a][voKey]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[m]`);
+  else aParts.push(`[${inputs.music}:a]anull[m]`);
+  aLabels.push('[m]');
+} else if (vo) aParts.push('[voKey]anullsink');
 if (base && V.keepBaseAudio) { aParts.push(`[${inputs.base}:a]volume=${V.keepBaseAudio}[ba]`); aLabels.push('[ba]'); }
 fc.push(aParts.join(';'));
-fc.push(`${aLabels.join('')}amix=inputs=${aLabels.length}:duration=longest:normalize=0,apad[a]`);
+// تطبيع الجهارة قرب مستوى المنصات الشائع (~-16 LUFS) حتى لا يكون الفيديو أخفت من غيره
+const LOUD = 'loudnorm=I=-16:TP=-1.5:LRA=11';
+fc.push(`${aLabels.join('')}amix=inputs=${aLabels.length}:duration=longest:normalize=0,${LOUD},aresample=${SR},apad[a]`);
 ff.push('-filter_complex', fc.join(';'), '-map', '[v]', '-map', '[a]',
   '-t', String(V.duration), '-r', String(fps),
   '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium',
@@ -171,5 +137,13 @@ await run('ffmpeg', ff, {
   },
 });
 await browser.close();
+// نسخة بديلة بلا موسيقى (نفس الصورة، مؤثرات فقط) للمقارنة
+if (useMusic && !vo) {
+  const alt = outFile.replace(/\.mp4$/, '-sfx-only.mp4');
+  await run('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-i', outFile, '-i', sfxPath, '-map', '0:v', '-map', '1:a', '-af', LOUD + `,aresample=${SR}`,
+    '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', String(V.duration), '-movflags', '+faststart', alt]);
+  console.log(`variant → ${path.relative(ROOT, alt)}`);
+}
 fs.unlinkSync(sfxPath);
+if (useMusic) fs.unlinkSync(musicPath);
 console.log(`\r${slug}: ${total} frames in ${((Date.now() - t0) / 1000).toFixed(0)}s → ${path.relative(ROOT, outFile)}${vo ? ' (with VO)' : ' (sfx only, no VO yet)'}`);

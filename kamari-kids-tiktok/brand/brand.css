@@ -22,6 +22,8 @@
   --mint-deep: #23977C;
   --sky: #BFE0F7;       /* أزرق سماوي خفيف: توازن للأولاد والبنات */
   --ink-soft: #7A6A8E;
+  --night: #23215A;     /* كحلي الليل: مشاهد «المشكلة» والبداية والنهاية (مأخوذ من الفيديو المرجعي) */
+  --night-2: #2F2D70;
 
   --f-head: 'Baloo Bhaijaan 2', 'Readex Pro', sans-serif;
   --f-body: 'Readex Pro', sans-serif;
@@ -73,3 +75,21 @@ body.transparent { background: transparent; }
 body.guides #guides { display: block; }
 #guides div { position: absolute; background: rgba(255,0,80,.22); border: 2px dashed rgba(255,0,80,.8); color: #b00030; font: 600 26px var(--f-body); padding: 8px; }
 .sub b { color: var(--mint-deep); }
+
+/* شريط العبارة المفتاحية: لون معاكس للخلفية (فكرة مأخوذة من فيديو النسق المرجعي) */
+.bar { display: inline-block; position: relative; padding: 2px 30px 14px; margin: 6px 0; }
+.bar::before { content: ''; position: absolute; inset: 0; border-radius: 26px; background: var(--plum);
+               transform-origin: right center; transform: scaleX(var(--bar, 1)); }
+.bar > * { position: relative; }
+.bar { color: var(--cream); }
+.bar.on-night::before { background: var(--cream); }
+.bar.on-night { color: var(--night); }
+.bar.sun::before { background: var(--sun); }
+.bar.sun { color: var(--plum); }
+.w { display: inline-block; }
+.on-night-text { color: var(--cream) !important; }
+
+/* علامة صغيرة ثابتة أعلى الوسط طوال الفيديو */
+#mark { position: absolute; left: 0; right: 0; top: 168px; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 50; }
+#mark .m { width: 54px; height: 54px; }
+#mark .t { font-family: var(--f-head); font-weight: 800; font-size: 40px; line-height: 1; padding-top: 6px; }
